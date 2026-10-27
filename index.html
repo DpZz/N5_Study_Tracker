@@ -60,7 +60,6 @@ input,select,textarea{width:100%;padding:10px 11px;border:1px solid #cad8d1;bord
 
  <section id="plan" class="tabpage hidden">
   <div class="panel"><div class="row between"><div><h2>Study roadmap</h2><p class="sub">From 27 Oct 2026 through 7 Jan 2027 · designed for 2 hours daily</p></div><span class="pill">73 calendar days</span></div>
-   <div class="notice" style="margin-bottom:15px">Use this as a flexible plan, not a guarantee of passing. Follow Minna no Nihongo Shokyu I lessons, your exercise book, kana practice, listening and regular tests. Move a lesson forward if you need more time.</div>
    <div class="calendar" id="calendar"></div>
   </div>
   <div class="panel"><h2>Phase-by-phase plan</h2><p class="sub">Target: finish core syllabus by 31 Dec; use 1–7 Jan for final review and practice tests.</p><div id="phases"></div></div>
@@ -109,11 +108,30 @@ input,select,textarea{width:100%;padding:10px 11px;border:1px solid #cad8d1;bord
  </section>
 
  <section id="backup" class="tabpage hidden">
-  <div class="panel"><h2>Save and move your progress</h2><p class="sub">Your tracker saves data in this browser on this device. Export a backup regularly, especially before changing devices or browsers.</p><div class="row"><button id="exportData">Download progress backup</button><label class="secondary" style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;margin:0;cursor:pointer"><input id="importFile" type="file" accept="application/json" style="width:auto"> Import backup</label></div><p id="backupStatus" class="muted"></p><hr style="border:0;border-top:1px solid var(--line);margin:18px 0"><h3>Reset this tracker</h3><p class="muted">This removes saved progress from this browser. Download a backup first if you want to keep it.</p><button class="danger" id="resetAll">Reset all saved data</button></div>
-  <div class="panel"><h2>Hosting notes</h2><ol><li>Extract the downloaded ZIP file.</li><li>For Vercel, create a new project and upload/import the folder containing <code>index.html</code>, or push it to a GitHub repository and import that repository.</li><li>No build command or framework is needed; this is a static HTML site.</li><li>Progress is saved locally in each browser. Use the backup feature to move it to another device. A hosted website alone does not sync data across devices.</li></ol><div class="notice">This version works offline after loading and does not require an account or database.</div></div>
+  <div class="panel">
+   <h2>Cloud sync with Supabase</h2>
+   <p class="sub">Sign in with the same account on each device to sync mock scores, lessons, tasks, notes and other tracker progress. Your browser keeps a local copy too.</p>
+   <div class="notice">First-time setup: create a Supabase project, run the SQL in the included README, then enter your Project URL and publishable/anon key below. Never enter a service-role key here.</div>
+   <div class="formgrid">
+    <div><label for="supabaseUrl">Supabase Project URL</label><input id="supabaseUrl" type="url" placeholder="https://your-project.supabase.co" autocomplete="url"></div>
+    <div><label for="supabaseKey">Supabase publishable / anon key</label><input id="supabaseKey" type="password" placeholder="sb_publishable_... or legacy anon key" autocomplete="off"></div>
+   </div>
+   <div class="row" style="margin-top:10px"><button id="saveSupabaseConfig">Save cloud settings</button><button class="secondary" id="clearSupabaseConfig">Clear settings</button></div>
+   <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+   <h3>Account</h3>
+   <div class="formgrid">
+    <div><label for="cloudEmail">Email</label><input id="cloudEmail" type="email" placeholder="you@example.com" autocomplete="email"></div>
+    <div><label for="cloudPassword">Password</label><input id="cloudPassword" type="password" placeholder="At least 8 characters" autocomplete="current-password"></div>
+   </div>
+   <div class="row" style="margin-top:10px"><button id="cloudSignUp">Create account</button><button id="cloudSignIn">Sign in</button><button class="secondary" id="cloudSignOut">Sign out</button></div>
+   <p id="cloudStatus" class="muted" role="status" aria-live="polite">Cloud sync is not configured.</p>
+  </div>
+  <div class="panel"><h2>Local backup</h2><p class="sub">Cloud sync is optional. You can also export a backup or import one from another device.</p><div class="row"><button id="exportData">Download progress backup</button><label class="secondary" style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;margin:0;cursor:pointer"><input id="importFile" type="file" accept="application/json" style="width:auto"> Import backup</label></div><p id="backupStatus" class="muted"></p><hr style="border:0;border-top:1px solid var(--line);margin:18px 0"><h3>Reset this tracker</h3><p class="muted">This resets the progress stored for the signed-in account as well as this browser. Download a backup first if you want to keep it.</p><button class="danger" id="resetAll">Reset all saved data</button></div>
+  <div class="panel"><h2>Hosting notes</h2><ol><li>Deploy the folder containing <code>index.html</code> to Vercel.</li><li>Configure Supabase and run the SQL in the README once per project.</li><li>On each device, open the deployed site, enter the same Project URL and publishable/anon key, and sign in using the same account.</li><li>Keep your Supabase service-role key private; it must never be placed in this website.</li></ol><div class="notice">Local storage is still used as a local cache. Cloud sync works when online and signed in.</div></div>
  </section>
  <div class="footer">Made for consistent practice · Not affiliated with the official JLPT or NAT-TEST · Keep your own exam registration and official syllabus details up to date.</div>
 </main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const START='2026-10-27', TARGET='2027-01-07';
 const lessons=[
@@ -174,7 +192,7 @@ function getTimer(id, mins){
   if(t.running&&t.endsAt) remaining=Math.max(0,Math.ceil((t.endsAt-Date.now())/1000));
   return {remaining, running:!!t.running, completed:!!t.completed || (!!t.running && remaining<=0)};
 }
-function saveTimerData(){localStorage.setItem(storeKey,JSON.stringify(data));}
+function saveTimerData(){save();}
 function startTimer(id,mins,date){
   const t=getTimer(id,mins); if(t.completed)return;
   data.timers[id]={duration:mins*60,remaining:t.remaining,endsAt:Date.now()+t.remaining*1000,running:true,completed:false,date};
@@ -205,8 +223,117 @@ function runTimerTicker(){
     });
   },1000);
 }
-function loadData(){try{return JSON.parse(localStorage.getItem(storeKey))||{checks:{},notes:{},lessons:{},mistakes:[],scores:[],known:[],review:[],quiz:{}}}catch(e){return {checks:{},notes:{},lessons:{},mistakes:[],scores:[],known:[],review:[],quiz:{}}}}
-function save(){localStorage.setItem(storeKey,JSON.stringify(data));renderStats()}
+function emptyData(){return {checks:{},notes:{},lessons:{},mistakes:[],scores:[],known:[],review:[],quiz:{},timers:{}}}
+function loadData(){try{return {...emptyData(),...(JSON.parse(localStorage.getItem(storeKey))||{})}}catch(e){return emptyData()}}
+let supabaseClient=null, cloudUser=null, cloudSyncTimer=null, cloudWriteInProgress=false;
+const cloudConfigKey='jpN5Journey_supabase_config_v1';
+function getCloudConfig(){try{return JSON.parse(localStorage.getItem(cloudConfigKey)||'{}')}catch(e){return {}}}
+function setCloudStatus(message){const el=document.getElementById('cloudStatus');if(el)el.textContent=message}
+function initSupabaseClient(){
+ const cfg=getCloudConfig();
+ if(!cfg.url||!cfg.key||!window.supabase){supabaseClient=null;return false}
+ try{supabaseClient=window.supabase.createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});return true}
+ catch(e){supabaseClient=null;setCloudStatus('Could not initialize Supabase. Check the Project URL and publishable/anon key.');return false}
+}
+function mergeCloudData(local,remote){
+ const out={...local,...remote};
+ const objectKeys=['checks','notes','lessons','quiz','timers'];
+ objectKeys.forEach(k=>out[k]={...(local?.[k]||{}),...(remote?.[k]||{})});
+ ['scores','mistakes'].forEach(k=>{
+  const all=[...(local?.[k]||[]),...(remote?.[k]||[])], seen=new Set();
+  out[k]=all.filter(item=>{const id=String(item?.id??JSON.stringify(item));if(seen.has(id))return false;seen.add(id);return true;}).sort((a,b)=>Number(b?.id||0)-Number(a?.id||0));
+ });
+ ['known','review'].forEach(k=>out[k]=[...new Set([...(local?.[k]||[]),...(remote?.[k]||[])])]);
+ return out;
+}
+function scheduleCloudSync(){
+ if(!cloudUser||!supabaseClient||cloudWriteInProgress)return;
+ clearTimeout(cloudSyncTimer);
+ cloudSyncTimer=setTimeout(syncToCloud,900);
+}
+async function syncToCloud(){
+ if(!cloudUser||!supabaseClient)return;
+ cloudWriteInProgress=true;
+ setCloudStatus('Syncing your progress to the cloud…');
+ try{
+  const payload={user_id:cloudUser.id,data,updated_at:new Date().toISOString()};
+  const {error}=await supabaseClient.from('tracker_data').upsert(payload,{onConflict:'user_id'});
+  if(error)throw error;
+  setCloudStatus('Cloud sync is up to date for '+cloudUser.email+'.');
+ }catch(e){console.error(e);setCloudStatus('Cloud sync failed: '+(e.message||'check table setup, RLS policy and internet connection')+'. Your local data is still saved.');}
+ finally{cloudWriteInProgress=false;}
+}
+async function loadCloudData(){
+ if(!supabaseClient)return;
+ const {data:{session},error:sessionError}=await supabaseClient.auth.getSession();
+ if(sessionError)throw sessionError;
+ cloudUser=session?.user||null;
+ if(!cloudUser){setCloudStatus('Cloud settings saved. Sign in to enable cross-device sync.');return}
+ setCloudStatus('Loading cloud progress…');
+ const {data:row,error}=await supabaseClient.from('tracker_data').select('data').eq('user_id',cloudUser.id).maybeSingle();
+ if(error)throw error;
+ if(row?.data)data=mergeCloudData(data,row.data);
+ save();
+ await syncToCloud();
+ document.getElementById('saveSupabaseConfig').onclick=()=>{
+ const url=document.getElementById('supabaseUrl').value.trim().replace(/\/+$/,'');
+ const key=document.getElementById('supabaseKey').value.trim();
+ if(!url||!key){setCloudStatus('Enter both the Supabase Project URL and publishable/anon key.');return}
+ try{new URL(url)}catch(e){setCloudStatus('Project URL does not look valid.');return}
+ localStorage.setItem(cloudConfigKey,JSON.stringify({url,key}));
+ if(initSupabaseClient()){setCloudStatus('Cloud settings saved. Sign in or create an account to sync.');}
+};
+document.getElementById('clearSupabaseConfig').onclick=()=>{
+ if(!confirm('Clear the Supabase settings saved in this browser? This will sign out locally but will not delete cloud data.'))return;
+ if(supabaseClient)supabaseClient.auth.signOut();
+ localStorage.removeItem(cloudConfigKey);supabaseClient=null;cloudUser=null;
+ document.getElementById('supabaseUrl').value='';document.getElementById('supabaseKey').value='';
+ setCloudStatus('Cloud settings cleared. Your local tracker data remains saved.');
+};
+document.getElementById('cloudSignUp').onclick=async()=>{
+ if(!supabaseClient){setCloudStatus('Save valid Supabase settings first.');return}
+ const email=document.getElementById('cloudEmail').value.trim(),password=document.getElementById('cloudPassword').value;
+ if(!email||password.length<8){setCloudStatus('Enter an email and a password with at least 8 characters.');return}
+ setCloudStatus('Creating account…');
+ const {data:result,error}=await supabaseClient.auth.signUp({email,password});
+ if(error){setCloudStatus('Sign-up failed: '+error.message);return}
+ if(result.session){cloudUser=result.user;await loadCloudData()}
+ else setCloudStatus('Account created. Check your email for a confirmation link, then sign in.');
+};
+document.getElementById('cloudSignIn').onclick=async()=>{
+ if(!supabaseClient){setCloudStatus('Save valid Supabase settings first.');return}
+ const email=document.getElementById('cloudEmail').value.trim(),password=document.getElementById('cloudPassword').value;
+ if(!email||!password){setCloudStatus('Enter your email and password.');return}
+ setCloudStatus('Signing in…');
+ const {error}=await supabaseClient.auth.signInWithPassword({email,password});
+ if(error){setCloudStatus('Sign-in failed: '+error.message);return}
+ try{await loadCloudData()}catch(e){setCloudStatus('Signed in, but cloud data could not load: '+(e.message||'check the SQL setup'))}
+};
+document.getElementById('cloudSignOut').onclick=async()=>{
+ if(supabaseClient)await supabaseClient.auth.signOut();
+ cloudUser=null;setCloudStatus('Signed out. This browser still has its local copy.');
+};
+(function restoreCloudSettings(){
+ const cfg=getCloudConfig();
+ document.getElementById('supabaseUrl').value=cfg.url||'';
+ document.getElementById('supabaseKey').value=cfg.key||'';
+ if(initSupabaseClient()){
+  supabaseClient.auth.onAuthStateChange((event,session)=>{
+   cloudUser=session?.user||null;
+   if(cloudUser&&event==='SIGNED_IN')setTimeout(()=>loadCloudData().catch(e=>setCloudStatus('Cloud load failed: '+(e.message||'check the setup'))),0);
+   if(!cloudUser&&event==='SIGNED_OUT')setCloudStatus('Signed out. Local progress remains saved.');
+  });
+  supabaseClient.auth.getSession().then(({data:{session}})=>{
+   if(session)loadCloudData().catch(e=>setCloudStatus('Cloud load failed: '+(e.message||'check the setup')));
+   else setCloudStatus('Cloud settings found. Sign in to enable cross-device sync.');
+  });
+ }
+})();
+
+renderToday();renderPlan();renderLessons();renderCard();renderMistakes();renderScores();runTimerTicker();
+ setCloudStatus('Signed in as '+cloudUser.email+'. Cloud sync is up to date.');
+}
+function save(){localStorage.setItem(storeKey,JSON.stringify(data));renderStats();scheduleCloudSync()}
 function iso(d){return d.toISOString().slice(0,10)}
 function parseDate(s){return new Date(s+'T12:00:00')}
 function daysBetween(a,b){return Math.round((parseDate(b)-parseDate(a))/86400000)}
@@ -251,15 +378,16 @@ function renderToday(){
   const id=`${date}_${i}`, timer=getTimer(id,t.mins), complete=timer.completed||!!data.checks[date]?.[i];
   const label=document.createElement('div');
   label.className='task'+(complete?' done timer-complete':'');
-  label.innerHTML=`<input type="checkbox" aria-label="Complete ${t.title}" ${complete?'checked':''} ${timer.completed?'disabled':''}>
+  label.innerHTML=`<input type="checkbox" aria-label="Complete ${t.title}" ${complete?'checked':''}>
     <div style="flex:1;min-width:0"><div class="tasktitle">${t.title}</div><div class="taskmeta">${t.detail}</div></div>
     <div class="tasktimer">${complete?'<span class="timer-ticket">✓ Completed</span>':`
       <span class="timerreadout" data-timer-readout="${id}">${formatTimer(timer.remaining)}</span>
       <div class="timercontrols"><button type="button" data-start="${id}">${timer.running?'Running…':(timer.remaining<t.mins*60?'Resume':'Start')}</button>
       <button type="button" class="pause" data-pause="${id}" ${timer.running?'':'disabled'}>Pause</button>
-      <button type="button" class="pause" data-reset="${id}">Reset</button></div>`}</div>`;
+      <button type="button" class="pause" data-reset="${id}">Reset</button></div>`}<button type="button" class="secondary" data-mark-done="${id}" style="font-size:11px;padding:5px 7px">${complete?'Undo done':'Mark as done'}</button></div>`;
   const cb=label.querySelector('input');
-  cb.addEventListener('change',e=>{if(!getTimer(id,t.mins).completed){e.target.checked=false;return;}data.checks[date]=data.checks[date]||{};data.checks[date][i]=e.target.checked;save();renderToday();});
+  cb.addEventListener('change',e=>{data.checks[date]=data.checks[date]||{};if(e.target.checked)data.checks[date][i]=true;else delete data.checks[date][i];if(data.timers[id]?.running){data.timers[id].running=false;data.timers[id].remaining=Math.max(0,Math.ceil((data.timers[id].endsAt-Date.now())/1000));delete data.timers[id].endsAt;}save();renderToday();runTimerTicker();});
+  const mark=label.querySelector('[data-mark-done]');mark.onclick=()=>{data.checks[date]=data.checks[date]||{};if(complete)delete data.checks[date][i];else data.checks[date][i]=true;if(data.timers[id]?.running){data.timers[id].running=false;data.timers[id].remaining=Math.max(0,Math.ceil((data.timers[id].endsAt-Date.now())/1000));delete data.timers[id].endsAt;}save();renderToday();runTimerTicker();};
   const start=label.querySelector('[data-start]');if(start)start.onclick=()=>startTimer(id,t.mins,date);
   const pause=label.querySelector('[data-pause]');if(pause)pause.onclick=()=>pauseTimer(id);
   const reset=label.querySelector('[data-reset]');if(reset)reset.onclick=()=>resetTimer(id,date,t.mins);
@@ -282,7 +410,7 @@ function renderCard(){let v=vocab[cardIndex];document.getElementById('cardWord')
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.tabpage').forEach(p=>p.classList.toggle('hidden',p.id!==b.dataset.tab));if(b.dataset.tab==='plan')renderPlan();if(b.dataset.tab==='lessons')renderLessons();if(b.dataset.tab==='vocab')renderCard();if(b.dataset.tab==='mistakes')renderMistakes();if(b.dataset.tab==='scores')renderScores()}));
 document.getElementById('studyDate').value=iso(new Date())>=START&&iso(new Date())<=TARGET?iso(new Date()):START;
 document.getElementById('studyDate').addEventListener('change',renderToday);
-document.getElementById('markAll').onclick=()=>{let d=document.getElementById('studyDate').value;data.checks[d]=data.checks[d]||{};taskSet(d).forEach((t,i)=>{if(getTimer(`${d}_${i}`,t.mins).completed)data.checks[d][i]=true});save();renderToday()};
+document.getElementById('markAll').onclick=()=>{let d=document.getElementById('studyDate').value;data.checks[d]=data.checks[d]||{};taskSet(d).forEach((t,i)=>{data.checks[d][i]=true;const id=`${d}_${i}`;if(data.timers[id]?.running){data.timers[id].running=false;data.timers[id].remaining=Math.max(0,Math.ceil((data.timers[id].endsAt-Date.now())/1000));delete data.timers[id].endsAt;}});save();renderToday();runTimerTicker()};
 document.getElementById('unmarkAll').onclick=()=>{let d=document.getElementById('studyDate').value;data.checks[d]={};save();renderToday()};
 document.getElementById('saveNote').onclick=()=>{let d=document.getElementById('studyDate').value;data.notes[d]=document.getElementById('dailyNote').value;save();document.getElementById('noteStatus').textContent='Saved';setTimeout(()=>document.getElementById('noteStatus').textContent='',1800)};
 document.getElementById('revealCard').onclick=()=>{document.getElementById('cardMeaning').classList.remove('hidden');document.getElementById('cardHint').textContent='Reading: '+vocab[cardIndex][2]};
@@ -299,9 +427,9 @@ document.getElementById('scoreDate').value=iso(new Date());
 document.getElementById('scoreForm').addEventListener('submit',e=>{e.preventDefault();let earned=+document.getElementById('scoreEarned').value,total=+document.getElementById('scoreTotal').value;if(earned>total){alert('Score earned cannot be greater than total marks.');return}data.scores.unshift({id:Date.now(),date:document.getElementById('scoreDate').value,type:document.getElementById('scoreType').value,earned,total,notes:document.getElementById('scoreNotes').value});save();e.target.reset();document.getElementById('scoreDate').value=iso(new Date());renderScores()});
 function renderScores(){document.getElementById('scoreRows').innerHTML=data.scores.length?data.scores.map(s=>`<tr><td>${s.date}</td><td>${s.type}</td><td>${s.earned}/${s.total}</td><td>${Math.round(s.earned/s.total*100)}%</td><td>${escapeHtml(s.notes||'')}</td><td><button class="danger" data-sdel="${s.id}">Delete</button></td></tr>`).join(''):'<tr><td colspan="6" class="muted">No scores saved yet.</td></tr>';document.querySelectorAll('[data-sdel]').forEach(b=>b.onclick=()=>{data.scores=data.scores.filter(s=>s.id!=b.dataset.sdel);save();renderScores()})}
 document.getElementById('exportData').onclick=()=>{let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='japanese-n5-progress-backup.json';a.click();URL.revokeObjectURL(a.href);document.getElementById('backupStatus').textContent='Backup downloaded.'};
-document.getElementById('importFile').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;try{let obj=JSON.parse(await f.text());if(!obj.checks||!obj.notes||!obj.lessons)throw Error('Invalid backup');data={...data,...obj};save();renderToday();renderLessons();renderMistakes();renderScores();document.getElementById('backupStatus').textContent='Backup imported.'}catch(err){document.getElementById('backupStatus').textContent='Could not import this file. Please select a tracker JSON backup.'}e.target.value=''});
+document.getElementById('importFile').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;try{let obj=JSON.parse(await f.text());if(!obj.checks||!obj.notes||!obj.lessons)throw Error('Invalid backup');data={...data,...obj};save();renderToday();renderLessons();renderMistakes();renderScores();document.getElementById('backupStatus').textContent='Backup imported locally'+(cloudUser?'; cloud sync queued.':'.')}catch(err){document.getElementById('backupStatus').textContent='Could not import this file. Please select a tracker JSON backup.'}e.target.value=''});
 document.getElementById('resetLessons').onclick=()=>{if(confirm('Reset all lesson completion ticks?')){data.lessons={};save();renderLessons()}};
-document.getElementById('resetAll').onclick=()=>{if(confirm('Delete all saved progress from this browser? Download a backup first if needed.')){localStorage.removeItem(storeKey);data=loadData();renderToday();renderPlan();renderLessons();renderMistakes();renderScores();document.getElementById('backupStatus').textContent='Saved progress reset.'}};
+document.getElementById('resetAll').onclick=()=>{if(confirm('Reset all tracker progress for this browser and, if signed in, your cloud account? Download a backup first if needed.')){data=emptyData();save();renderToday();renderPlan();renderLessons();renderCard();renderMistakes();renderScores();document.getElementById('backupStatus').textContent='Saved progress reset.'}};
 renderToday();renderPlan();renderLessons();renderCard();renderMistakes();renderScores();runTimerTicker();
 </script>
 </body>
