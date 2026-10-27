@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#173b35">
+<title>Japanese N5 Journey | Study Tracker</title>
+<style>
+:root{--bg:#f5f7f4;--card:#fff;--ink:#172a27;--muted:#657571;--green:#1c6253;--mint:#dff2e9;--line:#dce6e0;--gold:#f0c66d;--red:#b94d4d;--shadow:0 8px 28px #183d3210}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:10px 14px;background:var(--green);color:white;font-weight:650}button.secondary{background:#e8efeb;color:var(--ink)}button.danger{background:#fae8e7;color:#8d3333}button:disabled{opacity:.45;cursor:not-allowed}
+header{background:linear-gradient(120deg,#123c34,#236d5c);color:white;padding:26px max(20px,calc((100vw - 1160px)/2)) 24px}
+.topline{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.brand{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#cbe9dd;font-weight:750}.hero h1{font-size:clamp(27px,4vw,42px);line-height:1.12;margin:12px 0 10px}.hero p{margin:0;color:#d8ebe4;max-width:680px}.target{background:#ffffff18;border:1px solid #ffffff30;border-radius:14px;padding:12px 16px;min-width:190px}.target strong{display:block;font-size:20px}.target span{font-size:12px;color:#d8ebe4}
+.wrap{max-width:1160px;margin:auto;padding:22px 18px 50px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:-2px}.stat,.panel,.taskcard,.lesson-card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}.stat{padding:16px}.stat small{color:var(--muted);display:block}.stat strong{font-size:25px;display:block;margin:3px 0}.progress{height:8px;background:#e8efeb;border-radius:99px;overflow:hidden;margin-top:9px}.progress i{display:block;height:100%;width:0;background:#42a887;border-radius:99px;transition:width .2s}
+.tabs{display:flex;gap:7px;flex-wrap:wrap;margin:22px 0 16px}.tabs button{background:transparent;color:var(--muted);border:1px solid var(--line)}.tabs button.active{background:var(--green);color:white;border-color:var(--green)}
+.panel{padding:20px;margin-bottom:16px}.panel h2{margin:0 0 4px;font-size:22px}.sub{color:var(--muted);margin:0 0 15px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.between{justify-content:space-between}.grid2{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}.daily-list{display:grid;gap:9px}.task{display:flex;align-items:flex-start;gap:11px;padding:12px;border:1px solid var(--line);border-radius:12px}.task input{margin-top:5px;width:18px;height:18px;accent-color:var(--green);flex-shrink:0}.task.done{background:#f0f8f4}.task.done .tasktitle{text-decoration:line-through;color:var(--muted)}.tasktitle{font-weight:700}.taskmeta{font-size:12px;color:var(--muted)}.time{margin-left:auto;font-size:12px;background:#eef4f0;border-radius:8px;padding:3px 7px;white-space:nowrap;color:#3d6559}
+input,select,textarea{width:100%;padding:10px 11px;border:1px solid #cad8d1;border-radius:10px;background:white;color:var(--ink)}label{display:block;font-size:13px;font-weight:700;margin:10px 0 5px}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.jp{font-size:21px;font-weight:750}.romaji{font-size:12px;color:var(--muted)}.pill{display:inline-block;border-radius:99px;background:var(--mint);color:#205a4c;font-size:12px;padding:4px 9px;font-weight:700}.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.day{min-height:64px;border:1px solid var(--line);background:white;border-radius:9px;padding:7px 5px;text-align:center;font-size:12px;color:var(--muted)}.day strong{display:block;color:var(--ink);font-size:14px}.day.done{background:#e1f4eb;border-color:#b9dfce}.day.today{outline:2px solid var(--green)}.day.rest{background:#f3f3ee}.day button{font-size:11px;padding:3px 6px;margin-top:3px}
+.lesson-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.lesson-card{padding:14px;box-shadow:none}.lesson-card h3{margin:0 0 5px;font-size:16px}.lesson-card p{margin:0 0 10px;color:var(--muted);font-size:13px}.lesson-card .status{font-size:12px;color:var(--green);font-weight:750}
+.flashcard{background:linear-gradient(145deg,#f2faf6,#e0f1e9);border:1px solid #c8e2d5;border-radius:18px;padding:28px 16px;text-align:center;min-height:200px;display:flex;flex-direction:column;justify-content:center;align-items:center}.flashcard .jp{font-size:38px}.flashcard .meaning{font-size:23px;font-weight:750;margin-top:10px}.flashcard .romaji{margin-top:5px}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:520px}th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line)}th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.notice{background:#fff8e7;border:1px solid #f1dfae;border-radius:12px;padding:12px 14px;color:#6f5723}.question{padding:14px;border:1px solid var(--line);border-radius:12px;margin:10px 0}.question p{margin:0 0 8px;font-weight:700}.option{display:flex;gap:8px;align-items:flex-start;margin:7px 0;font-weight:400}.option input{width:auto;margin-top:5px}.feedback{padding:12px;border-radius:10px;margin-top:12px}.good{background:#e6f6ec;color:#225d3c}.bad{background:#fff0ed;color:#913d32}.muted{color:var(--muted)}.hidden{display:none!important}.footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
+@media(max-width:780px){.stats{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.lesson-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.target{min-width:unset}}@media(max-width:480px){.wrap{padding:14px 12px 35px}.panel{padding:15px}.lesson-grid{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.stat{padding:12px}.stat strong{font-size:22px}.day{min-height:55px;padding:5px 2px}}
+</style>
+</head>
+<body>
+<header>
+ <div class="topline">
+  <div class="brand">Japanese Exam Coach · Personal tracker</div>
+  <div class="target"><span>FINISH SYLLABUS BY</span><strong>07 Jan 2027</strong><span>NAT-TEST 5Q · JLPT N5 benchmark</span></div>
+ </div>
+ <div class="hero"><h1>One day at a time.<br>日本語を勉強しましょう！</h1><p>A practical beginner plan for 2 hours a day. Track your study, revise vocabulary, record mistakes and build confidence for the 5Q / N5 level.</p></div>
+</header>
+<main class="wrap">
+ <section class="stats">
+  <div class="stat"><small>Today's progress</small><strong id="todayPercent">0%</strong><div class="progress"><i id="todayBar"></i></div></div>
+  <div class="stat"><small>Plan completion</small><strong id="overallPercent">0%</strong><div class="progress"><i id="overallBar"></i></div></div>
+  <div class="stat"><small>Study days logged</small><strong id="daysLogged">0</strong><small>Days with at least one task checked</small></div>
+  <div class="stat"><small>Days until target</small><strong id="daysLeft">—</strong><small>Target: 7 January 2027</small></div>
+ </section>
+ <nav class="tabs" aria-label="Website sections">
+  <button class="active" data-tab="today">Today</button><button data-tab="plan">Full plan</button><button data-tab="lessons">Lessons</button><button data-tab="vocab">Flashcards</button><button data-tab="quiz">Quick quiz</button><button data-tab="mistakes">Mistake log</button><button data-tab="scores">Mock scores</button><button data-tab="backup">Backup</button>
+ </nav>
+
+ <section id="today" class="tabpage">
+  <div class="grid2">
+   <div class="panel">
+    <div class="row between"><div><h2 id="todayHeading">Today's study</h2><p class="sub" id="todaySub">Your 120-minute study session</p></div><span class="pill" id="dayBadge">Day 1</span></div>
+    <div class="formgrid">
+     <div><label for="studyDate">Study date</label><input id="studyDate" type="date" value="2026-10-27"></div>
+     <div><label for="energy">Energy today</label><select id="energy"><option>Normal</option><option>Low — do the minimum</option><option>High — add extra revision</option></select></div>
+    </div>
+    <div id="dailyTasks" class="daily-list" style="margin-top:14px"></div>
+    <div class="row" style="margin-top:14px"><button id="markAll">Mark all complete</button><button class="secondary" id="unmarkAll">Uncheck all</button></div>
+   </div>
+   <div>
+    <div class="panel"><h2>Today's focus</h2><p class="sub">Keep it small and finish the session.</p><div id="focusBox"></div><hr style="border:0;border-top:1px solid var(--line);margin:17px 0"><label for="dailyNote">What did I learn today?</label><textarea id="dailyNote" rows="4" placeholder="Write 1–3 lines. Example: は is pronounced wa when it is a topic particle."></textarea><button id="saveNote" style="margin-top:8px">Save daily note</button><span id="noteStatus" class="muted" style="margin-left:8px"></span></div>
+    <div class="panel"><h2>Rules that work</h2><ul><li>Study for 25 minutes, then take a short break.</li><li>Say Japanese sentences aloud, not just read them.</li><li>Review mistakes after 1, 3, 7 and 14 days.</li><li>On a busy day, do 20 minutes rather than quitting.</li></ul><div class="notice"><b>Important:</b> Finish the learning plan by 7 Jan. If your actual exam date is earlier, switch to revision and mock tests sooner.</div></div>
+   </div>
+  </div>
+ </section>
+
+ <section id="plan" class="tabpage hidden">
+  <div class="panel"><div class="row between"><div><h2>Study roadmap</h2><p class="sub">From 27 Oct 2026 through 7 Jan 2027 · designed for 2 hours daily</p></div><span class="pill">73 calendar days</span></div>
+   <div class="notice" style="margin-bottom:15px">Use this as a flexible plan, not a guarantee of passing. Follow Minna no Nihongo Shokyu I lessons, your exercise book, kana practice, listening and regular tests. Move a lesson forward if you need more time.</div>
+   <div class="calendar" id="calendar"></div>
+  </div>
+  <div class="panel"><h2>Phase-by-phase plan</h2><p class="sub">Target: finish core syllabus by 31 Dec; use 1–7 Jan for final review and practice tests.</p><div id="phases"></div></div>
+ </section>
+
+ <section id="lessons" class="tabpage hidden">
+  <div class="panel"><h2>Minna no Nihongo lesson tracker</h2><p class="sub">Tick lessons only when you have studied the grammar, vocabulary and exercises. Lesson 1 is today's starting point.</p><div class="row"><span class="pill" id="lessonCount">0 / 25 complete</span><button class="secondary" id="resetLessons">Reset lesson ticks</button></div><div class="lesson-grid" id="lessonGrid" style="margin-top:14px"></div></div>
+  <div class="panel"><h2>How to study each lesson</h2><ol><li>Learn the vocabulary and read it aloud.</li><li>Understand the grammar patterns and make 5 original sentences.</li><li>Complete the textbook and exercise-book practice.</li><li>Listen to the lesson audio and repeat the sentences.</li><li>Record mistakes and revisit them later.</li></ol></div>
+ </section>
+
+ <section id="vocab" class="tabpage hidden">
+  <div class="panel"><div class="row between"><div><h2>Vocabulary flashcards</h2><p class="sub">Try to recall the meaning before revealing the answer.</p></div><span class="pill" id="cardCounter">Card 1</span></div>
+   <div class="flashcard"><div class="romaji" id="cardCategory">Lesson 1 · Vocabulary</div><div class="jp" id="cardWord">わたし</div><div class="romaji" id="cardKanji">私</div><div id="cardMeaning" class="meaning hidden">I / me</div><div id="cardHint" class="romaji">Think of the meaning, then reveal.</div></div>
+   <div class="row" style="justify-content:center;margin-top:13px"><button id="revealCard">Reveal meaning</button><button class="secondary" id="knowCard">I knew it ✓</button><button class="secondary" id="reviewCard">Review again</button><button class="secondary" id="nextCard">Next →</button></div>
+   <p class="muted" style="text-align:center" id="cardScore">Known: 0 · Review: 0</p>
+  </div>
+  <div class="panel"><h2>Lesson 1 vocabulary list</h2><div class="tablewrap"><table><thead><tr><th>Japanese</th><th>Reading</th><th>Meaning</th></tr></thead><tbody id="vocabTable"></tbody></table></div></div>
+ </section>
+
+ <section id="quiz" class="tabpage hidden">
+  <div class="panel"><h2>Day 1 check-in quiz</h2><p class="sub">Answer without looking at notes. This is a learning check, not a full exam mock.</p>
+   <form id="quizForm">
+    <div class="question"><p>1. What does わたし mean?</p><label class="option"><input type="radio" name="q1" value="a"> I / me</label><label class="option"><input type="radio" name="q1" value="b"> teacher</label><label class="option"><input type="radio" name="q1" value="c"> student</label></div>
+    <div class="question"><p>2. In わたしは学生です, the particle は is pronounced…</p><label class="option"><input type="radio" name="q2" value="a"> ha</label><label class="option"><input type="radio" name="q2" value="b"> wa</label><label class="option"><input type="radio" name="q2" value="c"> hi</label></div>
+    <div class="question"><p>3. How do you say “I am not a teacher”?</p><label class="option"><input type="radio" name="q3" value="a"> わたしは先生です</label><label class="option"><input type="radio" name="q3" value="b"> わたしは先生じゃありません</label><label class="option"><input type="radio" name="q3" value="c"> わたしは学生です</label></div>
+    <div class="question"><p>4. これは何ですか means…</p><label class="option"><input type="radio" name="q4" value="a"> Who is this?</label><label class="option"><input type="radio" name="q4" value="b"> Where is this?</label><label class="option"><input type="radio" name="q4" value="c"> What is this?</label></div>
+    <div class="question"><p>5. Translate: 先生ですか。</p><label class="option"><input type="radio" name="q5" value="a"> Are you a teacher?</label><label class="option"><input type="radio" name="q5" value="b"> I am not a teacher.</label><label class="option"><input type="radio" name="q5" value="c"> I am a student.</label></div>
+    <button type="submit">Check my answers</button><button type="button" class="secondary" id="clearQuiz">Clear answers</button>
+   </form><div id="quizResult"></div>
+  </div>
+  <div class="panel"><h2>Lesson 1 grammar cheat sheet</h2><div class="tablewrap"><table><thead><tr><th>Pattern</th><th>Meaning</th><th>Example</th></tr></thead><tbody><tr><td>A は B です</td><td>A is B</td><td>わたしは学生です。</td></tr><tr><td>A は B じゃありません</td><td>A is not B</td><td>わたしは先生じゃありません。</td></tr><tr><td>A は B ですか</td><td>Is A B?</td><td>先生ですか。</td></tr><tr><td>これは何ですか</td><td>What is this?</td><td>これは何ですか。</td></tr></tbody></table></div><p class="muted">は is normally read “ha”, but as the topic particle it is pronounced “wa”. です is a polite sentence ending; か marks a question.</p></div>
+ </section>
+
+ <section id="mistakes" class="tabpage hidden">
+  <div class="panel"><h2>Mistake log</h2><p class="sub">Mistakes become revision tasks. Add the correction and a date to review it.</p>
+   <form id="mistakeForm"><div class="formgrid"><div><label for="mistakeTopic">Topic</label><input id="mistakeTopic" required placeholder="e.g. Particle は"></div><div><label for="mistakeDate">Review on</label><input id="mistakeDate" type="date"></div></div><label for="mistakeWrong">My wrong answer / confusion</label><textarea id="mistakeWrong" required rows="2" placeholder="What did I get wrong?"></textarea><label for="mistakeCorrect">Correct answer + reason</label><textarea id="mistakeCorrect" required rows="2" placeholder="Correct rule and one example"></textarea><button type="submit" style="margin-top:10px">Add mistake</button></form>
+   <div id="mistakeList" style="margin-top:18px"></div>
+  </div>
+ </section>
+
+ <section id="scores" class="tabpage hidden">
+  <div class="panel"><h2>Practice and mock-test scores</h2><p class="sub">Record your scores so you can see whether accuracy is improving. Use percentages if your test uses different total marks.</p>
+   <form id="scoreForm"><div class="formgrid"><div><label for="scoreDate">Date</label><input id="scoreDate" type="date" required></div><div><label for="scoreType">Test type</label><select id="scoreType"><option>Vocabulary / Kanji</option><option>Grammar / Reading</option><option>Listening</option><option>Mini mock</option><option>Full mock</option></select></div><div><label for="scoreEarned">Score earned</label><input id="scoreEarned" type="number" min="0" required></div><div><label for="scoreTotal">Total marks</label><input id="scoreTotal" type="number" min="1" required></div></div><label for="scoreNotes">Notes / weak area</label><input id="scoreNotes" placeholder="e.g. listening number questions"><button type="submit" style="margin-top:10px">Save score</button></form>
+   <div class="tablewrap" style="margin-top:18px"><table><thead><tr><th>Date</th><th>Type</th><th>Score</th><th>Percent</th><th>Notes</th><th></th></tr></thead><tbody id="scoreRows"></tbody></table></div>
+  </div>
+ </section>
+
+ <section id="backup" class="tabpage hidden">
+  <div class="panel"><h2>Save and move your progress</h2><p class="sub">Your tracker saves data in this browser on this device. Export a backup regularly, especially before changing devices or browsers.</p><div class="row"><button id="exportData">Download progress backup</button><label class="secondary" style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;margin:0;cursor:pointer"><input id="importFile" type="file" accept="application/json" style="width:auto"> Import backup</label></div><p id="backupStatus" class="muted"></p><hr style="border:0;border-top:1px solid var(--line);margin:18px 0"><h3>Reset this tracker</h3><p class="muted">This removes saved progress from this browser. Download a backup first if you want to keep it.</p><button class="danger" id="resetAll">Reset all saved data</button></div>
+  <div class="panel"><h2>Hosting notes</h2><ol><li>Extract the downloaded ZIP file.</li><li>For Vercel, create a new project and upload/import the folder containing <code>index.html</code>, or push it to a GitHub repository and import that repository.</li><li>No build command or framework is needed; this is a static HTML site.</li><li>Progress is saved locally in each browser. Use the backup feature to move it to another device. A hosted website alone does not sync data across devices.</li></ol><div class="notice">This version works offline after loading and does not require an account or database.</div></div>
+ </section>
+ <div class="footer">Made for consistent practice · Not affiliated with the official JLPT or NAT-TEST · Keep your own exam registration and official syllabus details up to date.</div>
+</main>
+<script>
+const START='2026-10-27', TARGET='2027-01-07';
+const lessons=[
+['Lesson 1','Introductions, です, は, か','Self-introduction and identity'],
+['Lesson 2','これ / それ / あれ, の','Things and ownership'],
+['Lesson 3','ここ / そこ / あそこ, places','Locations and directions'],
+['Lesson 4','Time, days, basic verbs','Clock time and daily schedule'],
+['Lesson 5','いきます / きます / かえります','Going and coming'],
+['Lesson 6','を / で, invitations','Actions and places'],
+['Lesson 7','Tools, に / で, giving/receiving','How actions are done'],
+['Lesson 8','い-adjectives and な-adjectives','Describe people and things'],
+['Lesson 9','好き, きらい, じょうず, へた','Likes, dislikes and ability'],
+['Lesson 10','あります / います','Existence and location'],
+['Lesson 11','Counters and frequency','Counting things and how often'],
+['Lesson 12','Past adjectives and comparisons','Comparing things'],
+['Lesson 13','ほしい, たい','Wants and wishes'],
+['Lesson 14','て-form, てください','Requests and actions'],
+['Lesson 15','てもいいです / てはいけません','Permission and prohibition'],
+['Lesson 16','て-form sequences and descriptions','Connecting actions'],
+['Lesson 17','ない-form, ないでください','Negative requests'],
+['Lesson 18','ことができます, 趣味','Ability and hobbies'],
+['Lesson 19','た-form, experiences','Experiences and changes'],
+['Lesson 20','Plain form introduction','Casual/plain speech basics'],
+['Lesson 21','と思います / と言いました','Opinions and reported speech'],
+['Lesson 22','Relative clauses','Describing nouns'],
+['Lesson 23','とき / と','When and if/whenever'],
+['Lesson 24','くれます / もらいます / あげます','Giving and receiving'],
+['Lesson 25','たら / ても','Conditions and concessions']
+];
+const vocab=[
+['わたし','私','watashi','I / me'],['学生','がくせい','gakusei','student'],['先生','せんせい','sensei','teacher'],['会社員','かいしゃいん','kaishain','company employee'],['日本人','にほんじん','nihonjin','Japanese person'],['友達','ともだち','tomodachi','friend'],['本','ほん','hon','book'],['何','なに／なん','nani / nan','what'],['はい','—','hai','yes'],['いいえ','—','iie','no'],['これ','—','kore','this'],['それ','—','sore','that (near listener)'],['あれ','—','are','that (over there)'],['だれ','—','dare','who'],['名前','なまえ','namae','name'],['日本','にほん','nihon','Japan'],['国','くに','kuni','country'],['こちら','—','kochira','this way / this person'],['あの人','あのひと','ano hito','that person'],['〜さん','—','-san','polite name suffix']
+];
+const phases=[
+{from:'2026-10-27',to:'2026-11-09',title:'Phase 1 · Foundation',desc:'Kana speed and Minna no Nihongo Lessons 1–6. Build daily habit, learn sentence patterns, numbers, time and basic particles.'},
+{from:'2026-11-10',to:'2026-11-29',title:'Phase 2 · Core grammar',desc:'Lessons 7–15. Adjectives, existence, counters, wants, て-form, requests, permission and prohibition. Keep revising earlier lessons.'},
+{from:'2026-11-30',to:'2026-12-19',title:'Phase 3 · Finish textbook core',desc:'Lessons 16–25. Plain forms, experiences, opinions, relative clauses, conditions and giving/receiving. Make a one-page grammar sheet per lesson.'},
+{from:'2026-12-20',to:'2026-12-31',title:'Phase 4 · Revision and practice',desc:'Review all lessons, build vocabulary/kanji recall, do listening practice, and complete timed section tests. Focus on your weakest two areas.'},
+{from:'2027-01-01',to:'2027-01-07',title:'Phase 5 · Final week',desc:'Take timed mini/full practice tests, review every error, practise listening daily, and keep sleep steady. Avoid trying to learn too much new material.'}
+];
+const defaultTasks=[
+{title:'Kana warm-up',detail:'Read hiragana/katakana aloud; practise the rows you hesitate on.',mins:20},
+{title:'Minna no Nihongo grammar',detail:'Study Lesson 1: A は B です / じゃありません / ですか.',mins:30},
+{title:'Vocabulary recall',detail:'Learn 8–10 Lesson 1 words. Say Japanese → meaning and meaning → Japanese.',mins:20},
+{title:'Textbook + exercise book',detail:'Complete Lesson 1 examples and exercises; say answers aloud.',mins:25},
+{title:'Quiz + spaced review',detail:'Take the quick quiz, write 2–3 sentences, and log mistakes.',mins:25}
+];
+const storeKey='jpN5Journey_v1';
+let data=loadData();
+function loadData(){try{return JSON.parse(localStorage.getItem(storeKey))||{checks:{},notes:{},lessons:{},mistakes:[],scores:[],known:[],review:[],quiz:{}}}catch(e){return {checks:{},notes:{},lessons:{},mistakes:[],scores:[],known:[],review:[],quiz:{}}}}
+function save(){localStorage.setItem(storeKey,JSON.stringify(data));renderStats()}
+function iso(d){return d.toISOString().slice(0,10)}
+function parseDate(s){return new Date(s+'T12:00:00')}
+function daysBetween(a,b){return Math.round((parseDate(b)-parseDate(a))/86400000)}
+function fmtDate(s){return parseDate(s).toLocaleDateString(undefined,{day:'numeric',month:'short'})}
+function phaseFor(date){return phases.find(p=>date>=p.from&&date<=p.to)||phases[phases.length-1]}
+function lessonForDate(date){let n=daysBetween(START,date);if(n<0)return 1;if(n<=13)return Math.min(6,Math.floor(n/2)+1);if(n<=33)return Math.min(15,7+Math.floor((n-14)/2));if(n<=53)return Math.min(25,16+Math.floor((n-34)/2));return Math.max(1,Math.min(25,Math.ceil((25*(daysBetween(START,date)+1))/55)))}
+function taskSet(date){
+ let n=daysBetween(START,date), phase=phaseFor(date), lesson=lessonForDate(date);
+ if(date===START)return defaultTasks;
+ if(date>='2026-12-20')return [
+ {title:'Vocabulary + kanji review',detail:'Recall old words without looking; mark weak cards for review.',mins:25},
+ {title:'Grammar revision',detail:'Revise 2–3 lesson sheets and write example sentences.',mins:30},
+ {title:'Timed practice',detail:'Complete a timed vocabulary, grammar/reading or listening section.',mins:30},
+ {title:'Listening practice',detail:'Listen once for meaning, again for details, then shadow aloud.',mins:20},
+ {title:'Error log + spaced review',detail:'Correct errors and review mistakes due today.',mins:15}
+ ];
+ let lessonName=lessons[lesson-1]||lessons[0];
+ return [
+ {title:'Kana + old vocabulary',detail:'10 minutes kana speed; 10 minutes spaced-repetition vocabulary.',mins:20},
+ {title:'Minna no Nihongo '+lessonName[0],detail:lessonName[1]+'. Study the explanation and examples.',mins:30},
+ {title:'Vocabulary + kanji',detail:'Learn 8–12 useful words; write readings and meanings from memory.',mins:20},
+ {title:'Exercises + speaking',detail:'Complete textbook/workbook practice and make 5 original sentences.',mins:25},
+ {title:'Listening + review',detail:'Listen and shadow; review errors from 1, 3, 7 or 14 days ago.',mins:25}
+ ];
+}
+function renderStats(){
+ let allDates=Object.keys(data.checks), logged=new Set(allDates.filter(d=>Object.values(data.checks[d]||{}).some(Boolean))).size;
+ let all=0,done=0;let today=document.getElementById('studyDate')?.value||START;
+ for(let i=0;i<=daysBetween(START,TARGET);i++){let d=iso(new Date(parseDate(START).getTime()+i*86400000));let ts=taskSet(d);all+=ts.length;done+=ts.filter((_,j)=>data.checks[d]?.[j]).length}
+ let tasks=taskSet(today),td=tasks.filter((_,i)=>data.checks[today]?.[i]).length;
+ document.getElementById('todayPercent').textContent=Math.round(td/tasks.length*100)+'%';document.getElementById('todayBar').style.width=(td/tasks.length*100)+'%';
+ document.getElementById('overallPercent').textContent=Math.round(done/all*100)+'%';document.getElementById('overallBar').style.width=(done/all*100)+'%';
+ document.getElementById('daysLogged').textContent=logged;document.getElementById('daysLeft').textContent=Math.max(0,daysBetween(today,TARGET));
+}
+function renderToday(){
+ const date=document.getElementById('studyDate').value||START, tasks=taskSet(date), phase=phaseFor(date), lesson=lessonForDate(date);
+ document.getElementById('todayHeading').textContent=date===iso(new Date())?'Today’s study': 'Study · '+fmtDate(date);
+ document.getElementById('todaySub').textContent='About 120 minutes · '+phase.title;
+ document.getElementById('dayBadge').textContent='Day '+Math.max(1,daysBetween(START,date)+1);
+ const box=document.getElementById('dailyTasks');box.innerHTML='';
+ tasks.forEach((t,i)=>{let label=document.createElement('label');label.className='task'+(data.checks[date]?.[i]?' done':'');label.innerHTML=`<input type="checkbox" ${data.checks[date]?.[i]?'checked':''}><div style="flex:1"><div class="tasktitle">${t.title}</div><div class="taskmeta">${t.detail}</div></div><span class="time">${t.mins} min</span>`;label.querySelector('input').addEventListener('change',e=>{data.checks[date]=data.checks[date]||{};data.checks[date][i]=e.target.checked;save();renderToday()});box.appendChild(label)});
+ document.getElementById('focusBox').innerHTML=`<p><span class="pill">${phase.title}</span></p><p>${phase.desc}</p><p><b>Suggested textbook focus:</b> Minna no Nihongo ${lessons[lesson-1][0]} — ${lessons[lesson-1][1]}.</p><p class="muted">If today's lesson is too difficult, spend the time understanding it instead of rushing to the next one.</p>`;
+ document.getElementById('dailyNote').value=data.notes[date]||'';renderStats();
+}
+function renderPlan(){
+ const cal=document.getElementById('calendar');cal.innerHTML='';['M','T','W','T','F','S','S'].forEach(x=>{let el=document.createElement('div');el.className='day';el.style.minHeight='auto';el.innerHTML='<strong>'+x+'</strong>';cal.appendChild(el)});
+ let start=parseDate(START), offset=(start.getDay()+6)%7;for(let i=0;i<offset;i++){let e=document.createElement('div');e.className='day';e.style.visibility='hidden';cal.appendChild(e)}
+ for(let i=0;i<=daysBetween(START,TARGET);i++){let d=iso(new Date(start.getTime()+i*86400000)),ts=taskSet(d),checked=ts.filter((_,j)=>data.checks[d]?.[j]).length,el=document.createElement('div');el.className='day'+(checked===ts.length?' done':'')+(d===iso(new Date())?' today':'')+(new Date(d).getDay()===0?' rest':'');el.innerHTML=`<strong>${parseDate(d).getDate()}</strong><span>${fmtDate(d).split(' ')[0]}</span><br><span>${checked}/${ts.length}</span>`;el.title=d+' · '+checked+' of '+ts.length+' tasks';el.addEventListener('click',()=>{document.getElementById('studyDate').value=d;document.querySelector('[data-tab="today"]').click()});cal.appendChild(el)}
+ document.getElementById('phases').innerHTML=phases.map(p=>`<div class="task" style="margin:10px 0"><div style="flex:1"><div class="tasktitle">${p.title}</div><div class="taskmeta">${fmtDate(p.from)} – ${fmtDate(p.to)}</div><div style="margin-top:5px">${p.desc}</div></div></div>`).join('');
+}
+function renderLessons(){
+ const g=document.getElementById('lessonGrid');g.innerHTML='';lessons.forEach((l,i)=>{let el=document.createElement('div');el.className='lesson-card';el.innerHTML=`<h3>${l[0]}</h3><p>${l[1]}</p><p>${l[2]}</p><label style="display:flex;align-items:center;gap:8px"><input type="checkbox" style="width:auto" ${data.lessons[i]?'checked':''}> Mark complete</label><div class="status">${data.lessons[i]?'✓ Completed':'Not completed yet'}</div>`;el.querySelector('input').addEventListener('change',e=>{data.lessons[i]=e.target.checked;save();renderLessons()});g.appendChild(el)});let n=Object.values(data.lessons).filter(Boolean).length;document.getElementById('lessonCount').textContent=n+' / 25 complete';
+}
+let cardIndex=0;
+function renderCard(){let v=vocab[cardIndex];document.getElementById('cardWord').textContent=v[0];document.getElementById('cardKanji').textContent=v[1]==='—'?'':v[1];document.getElementById('cardMeaning').textContent=v[3];document.getElementById('cardMeaning').classList.add('hidden');document.getElementById('cardHint').textContent='Think of the meaning, then reveal.';document.getElementById('cardCounter').textContent=`Card ${cardIndex+1} of ${vocab.length}`;document.getElementById('cardCategory').textContent='Starter vocabulary';document.getElementById('cardScore').textContent=`Known: ${data.known.length} · Review: ${data.review.length}`;document.getElementById('vocabTable').innerHTML=vocab.map(v=>`<tr><td>${v[0]}</td><td>${v[2]}</td><td>${v[3]}</td></tr>`).join('')}
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.tabpage').forEach(p=>p.classList.toggle('hidden',p.id!==b.dataset.tab));if(b.dataset.tab==='plan')renderPlan();if(b.dataset.tab==='lessons')renderLessons();if(b.dataset.tab==='vocab')renderCard();if(b.dataset.tab==='mistakes')renderMistakes();if(b.dataset.tab==='scores')renderScores()}));
+document.getElementById('studyDate').value=iso(new Date())>=START&&iso(new Date())<=TARGET?iso(new Date()):START;
+document.getElementById('studyDate').addEventListener('change',renderToday);
+document.getElementById('markAll').onclick=()=>{let d=document.getElementById('studyDate').value;data.checks[d]={};taskSet(d).forEach((_,i)=>data.checks[d][i]=true);save();renderToday()};
+document.getElementById('unmarkAll').onclick=()=>{let d=document.getElementById('studyDate').value;data.checks[d]={};save();renderToday()};
+document.getElementById('saveNote').onclick=()=>{let d=document.getElementById('studyDate').value;data.notes[d]=document.getElementById('dailyNote').value;save();document.getElementById('noteStatus').textContent='Saved';setTimeout(()=>document.getElementById('noteStatus').textContent='',1800)};
+document.getElementById('revealCard').onclick=()=>{document.getElementById('cardMeaning').classList.remove('hidden');document.getElementById('cardHint').textContent='Reading: '+vocab[cardIndex][2]};
+document.getElementById('knowCard').onclick=()=>{if(!data.known.includes(cardIndex))data.known.push(cardIndex);data.review=data.review.filter(x=>x!==cardIndex);save();cardIndex=(cardIndex+1)%vocab.length;renderCard()};
+document.getElementById('reviewCard').onclick=()=>{if(!data.review.includes(cardIndex))data.review.push(cardIndex);data.known=data.known.filter(x=>x!==cardIndex);save();cardIndex=(cardIndex+1)%vocab.length;renderCard()};
+document.getElementById('nextCard').onclick=()=>{cardIndex=(cardIndex+1)%vocab.length;renderCard()};
+document.getElementById('quizForm').addEventListener('submit',e=>{e.preventDefault();let key={q1:'a',q2:'b',q3:'b',q4:'c',q5:'a'},fd=new FormData(e.target),score=0,html='';for(let i=1;i<=5;i++){let ans=fd.get('q'+i),ok=ans===key['q'+i];if(ok)score++;html+=`<div class="feedback ${ok?'good':'bad'}">Question ${i}: ${ok?'Correct ✓':'Not quite — correct answer: '+({q1:'I / me',q2:'wa',q3:'わたしは先生じゃありません',q4:'What is this?',q5:'Are you a teacher?'}['q'+i])}</div>`}document.getElementById('quizResult').innerHTML=`<h3>Score: ${score}/5 (${score*20}%)</h3>${html}<p>Review the explanations above and add any confusing item to your mistake log.</p>`;data.quiz[iso(new Date())]={score,total:5};save()});
+document.getElementById('clearQuiz').onclick=()=>{document.getElementById('quizForm').reset();document.getElementById('quizResult').innerHTML=''};
+document.getElementById('mistakeDate').value=iso(new Date(Date.now()+3*86400000));
+document.getElementById('mistakeForm').addEventListener('submit',e=>{e.preventDefault();data.mistakes.unshift({id:Date.now(),topic:document.getElementById('mistakeTopic').value,review:document.getElementById('mistakeDate').value,wrong:document.getElementById('mistakeWrong').value,correct:document.getElementById('mistakeCorrect').value,done:false});save();e.target.reset();document.getElementById('mistakeDate').value=iso(new Date(Date.now()+3*86400000));renderMistakes()});
+function renderMistakes(){let box=document.getElementById('mistakeList');if(!data.mistakes.length){box.innerHTML='<p class="muted">No mistakes logged yet. Add one after your first quiz or lesson.</p>';return}box.innerHTML=data.mistakes.map(m=>`<div class="task" style="margin:9px 0"><input type="checkbox" ${m.done?'checked':''} data-mdone="${m.id}"><div style="flex:1"><div class="tasktitle">${m.topic}</div><div class="taskmeta">Review on ${m.review||'not scheduled'}</div><p><b>Confusion:</b> ${escapeHtml(m.wrong)}</p><p><b>Correction:</b> ${escapeHtml(m.correct)}</p></div><button class="danger" data-mdel="${m.id}">Delete</button></div>`).join('');box.querySelectorAll('[data-mdone]').forEach(el=>el.onchange=()=>{let m=data.mistakes.find(x=>x.id==el.dataset.mdone);m.done=el.checked;save();renderMistakes()});box.querySelectorAll('[data-mdel]').forEach(el=>el.onclick=()=>{data.mistakes=data.mistakes.filter(x=>x.id!=el.dataset.mdel);save();renderMistakes()})}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+document.getElementById('scoreDate').value=iso(new Date());
+document.getElementById('scoreForm').addEventListener('submit',e=>{e.preventDefault();let earned=+document.getElementById('scoreEarned').value,total=+document.getElementById('scoreTotal').value;if(earned>total){alert('Score earned cannot be greater than total marks.');return}data.scores.unshift({id:Date.now(),date:document.getElementById('scoreDate').value,type:document.getElementById('scoreType').value,earned,total,notes:document.getElementById('scoreNotes').value});save();e.target.reset();document.getElementById('scoreDate').value=iso(new Date());renderScores()});
+function renderScores(){document.getElementById('scoreRows').innerHTML=data.scores.length?data.scores.map(s=>`<tr><td>${s.date}</td><td>${s.type}</td><td>${s.earned}/${s.total}</td><td>${Math.round(s.earned/s.total*100)}%</td><td>${escapeHtml(s.notes||'')}</td><td><button class="danger" data-sdel="${s.id}">Delete</button></td></tr>`).join(''):'<tr><td colspan="6" class="muted">No scores saved yet.</td></tr>';document.querySelectorAll('[data-sdel]').forEach(b=>b.onclick=()=>{data.scores=data.scores.filter(s=>s.id!=b.dataset.sdel);save();renderScores()})}
+document.getElementById('exportData').onclick=()=>{let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='japanese-n5-progress-backup.json';a.click();URL.revokeObjectURL(a.href);document.getElementById('backupStatus').textContent='Backup downloaded.'};
+document.getElementById('importFile').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;try{let obj=JSON.parse(await f.text());if(!obj.checks||!obj.notes||!obj.lessons)throw Error('Invalid backup');data={...data,...obj};save();renderToday();renderLessons();renderMistakes();renderScores();document.getElementById('backupStatus').textContent='Backup imported.'}catch(err){document.getElementById('backupStatus').textContent='Could not import this file. Please select a tracker JSON backup.'}e.target.value=''});
+document.getElementById('resetLessons').onclick=()=>{if(confirm('Reset all lesson completion ticks?')){data.lessons={};save();renderLessons()}};
+document.getElementById('resetAll').onclick=()=>{if(confirm('Delete all saved progress from this browser? Download a backup first if needed.')){localStorage.removeItem(storeKey);data=loadData();renderToday();renderPlan();renderLessons();renderMistakes();renderScores();document.getElementById('backupStatus').textContent='Saved progress reset.'}};
+renderToday();renderPlan();renderLessons();renderCard();renderMistakes();renderScores();
+</script>
+</body>
+</html>
