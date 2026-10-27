@@ -106,3 +106,56 @@ This package includes `api/config.js`. Deploy the entire folder so Vercel create
 Choose Production (and Preview too if you want preview deployments to work), save, then redeploy. The website calls `/api/config` and fills in the Supabase settings automatically. These are public client credentials; do not configure or expose a service-role/secret key.
 
 **Important:** The serverless endpoint returns only the publishable/anon key, which is meant to be public in a browser. Database security must still be enforced with Supabase Auth and the row-level security policies above.
+
+# Japanese N5 Tracker — Demt shared profile (Vercel + Supabase)
+
+This build removes email/password sign-in. All devices use one shared profile named **Demt**. A shared access code is requested once per browser and saved locally so you do not need to sign in on every visit.
+
+## Important privacy note
+This is a shared profile, not per-user private storage. Anyone who has both the website URL and the shared access code can view or overwrite the shared tracker data. Choose a strong, non-obvious access code and share it only with people you trust. Do not put the Supabase service-role key in browser code or public GitHub files.
+
+## 1. Supabase table
+In Supabase SQL Editor, run:
+
+```sql
+create table if not exists public.tracker_shared_data (
+  profile text primary key,
+  data jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.tracker_data enable row level security;
+```
+
+The Vercel API uses the service-role key server-side, so it can access this table despite RLS. Do not add a policy that exposes this table to `anon` or `authenticated`. If an earlier user-based `tracker_data` table exists with `user_id` as its primary key, back it up first and migrate/create a separate table with `profile` as the primary key.
+
+## 2. Vercel environment variables
+In Vercel → Project → Settings → Environment Variables, add these for **Production** (and Preview if you test previews):
+- `SUPABASE_URL` = Supabase Project URL
+- `SUPABASE_SERVICE_ROLE_KEY` = Supabase service-role/secret key (server-side only)
+- `DEMT_ACCESS_CODE` = a strong shared access code you choose
+
+Save and redeploy. The service-role key is used only by `/api/tracker.js`; it is never sent to the browser. Never name it with a `NEXT_PUBLIC_` or `VITE_` prefix.
+
+## 3. Deploy
+Deploy the entire project folder, including:
+- `index.html`
+- `api/tracker.js`
+
+Do not deploy only `index.html`, because the API endpoint is required for cloud storage.
+
+## 4. First visit
+1. Open the deployed site and go to Backup.
+2. The site checks the cloud automatically.
+3. When prompted, enter the same `DEMT_ACCESS_CODE` you configured in Vercel. It is remembered in that browser.
+4. On other devices, enter the same access code once.
+5. Look for **Connected — Demt profile is backed up to Supabase**. Use **Test connection** or **Sync now** if needed.
+
+## Troubleshooting
+- `503`: one or more Vercel environment variables are missing, or the deployment has not been redeployed.
+- `401`: access code does not match `DEMT_ACCESS_CODE`. Clear the saved `demtTrackerAccessCode` value in browser local storage to re-enter it.
+- `Supabase read/write failed`: check that the `tracker_shared_data` table has `profile`, `data`, and `updated_at` columns and that the service-role key belongs to this project.
+- Local storage continues to save when cloud backup is unavailable. Export a JSON backup periodically.
+
+## Data sync note
+The app merges local progress with the shared profile when it first loads and then uploads changes. Since this is one shared profile, avoid editing the same task or score on two devices simultaneously while offline.
