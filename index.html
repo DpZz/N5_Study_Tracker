@@ -275,9 +275,7 @@ function attachCloudHandlers(){
 attachCloudHandlers();
 
 
-</script>
-</body>
-</html>
+
 function renderStats(){
  let allDates=Object.keys(data.checks), logged=new Set(allDates.filter(d=>Object.values(data.checks[d]||{}).some(Boolean))).size;
  let all=0,done=0;let today=document.getElementById('studyDate')?.value||START;
