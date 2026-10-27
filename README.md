@@ -109,7 +109,7 @@ Choose Production (and Preview too if you want preview deployments to work), sav
 
 # Japanese N5 Tracker — Demt shared profile (Vercel + Supabase)
 
-This build removes email/password sign-in and adds a dedicated N5-level kanji flashcard section. It includes a daily plan with visible study tasks and separate kanji known/review progress. All devices use one shared profile named **Demt**. A shared access code is requested once per browser and saved locally so you do not need to sign in on every visit.
+This build removes email/password sign-in and adds a dedicated 200-character beginner kanji flashcard section with Easy (50), Medium (100), and Hard (all 200) modes. It includes a daily plan with visible study tasks and separate kanji known/review progress. All devices use one shared profile named **Demt**. A shared access code is requested once per browser and saved locally so you do not need to sign in on every visit.
 
 ## Important privacy note
 This is a shared profile, not per-user private storage. Anyone who has both the website URL and the shared access code can view or overwrite the shared tracker data. Choose a strong, non-obvious access code and share it only with people you trust. Do not put the Supabase service-role key in browser code or public GitHub files.
@@ -159,3 +159,7 @@ Do not deploy only `index.html`, because the API endpoint is required for cloud 
 
 ## Data sync note
 The app merges local progress with the shared profile when it first loads and then uploads changes. Kanji known/review progress is stored in the shared tracker data as well. Since this is one shared profile, avoid editing the same task or score on two devices simultaneously while offline.
+
+
+## Profile selector
+On first visit, choose **Deepak** to use the shared cloud-backed profile (requires the `DEMT_ACCESS_CODE`) or **Guest** to use a separate local-only profile. Guest progress is saved in that browser and is not synced to Supabase. Use **Switch profile** in the header to change profiles.

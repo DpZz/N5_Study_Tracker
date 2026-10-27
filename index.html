@@ -18,6 +18,7 @@ input,select,textarea{width:100%;padding:10px 11px;border:1px solid #cad8d1;bord
 .lesson-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.lesson-card{padding:14px;box-shadow:none}.lesson-card h3{margin:0 0 5px;font-size:16px}.lesson-card p{margin:0 0 10px;color:var(--muted);font-size:13px}.lesson-card .status{font-size:12px;color:var(--green);font-weight:750}
 .flashcard{background:linear-gradient(145deg,#f2faf6,#e0f1e9);border:1px solid #c8e2d5;border-radius:18px;padding:28px 16px;text-align:center;min-height:200px;display:flex;flex-direction:column;justify-content:center;align-items:center}.flashcard .jp{font-size:38px}.flashcard .meaning{font-size:23px;font-weight:750;margin-top:10px}.flashcard .romaji{margin-top:5px}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:520px}th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line)}th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
 .notice{background:#fff8e7;border:1px solid #f1dfae;border-radius:12px;padding:12px 14px;color:#6f5723}.question{padding:14px;border:1px solid var(--line);border-radius:12px;margin:10px 0}.question p{margin:0 0 8px;font-weight:700}.option{display:flex;gap:8px;align-items:flex-start;margin:7px 0;font-weight:400}.option input{width:auto;margin-top:5px}.feedback{padding:12px;border-radius:10px;margin-top:12px}.good{background:#e6f6ec;color:#225d3c}.bad{background:#fff0ed;color:#913d32}.muted{color:var(--muted)}.hidden{display:none!important}.footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
+.profile-switch{background:#ffffff20;color:white;border:1px solid #ffffff55;border-radius:999px;padding:8px 13px;font-size:13px}.profile-overlay{position:fixed;inset:0;z-index:9999;background:#102c26b8;display:flex;align-items:center;justify-content:center;padding:18px}.profile-dialog{width:min(520px,100%);background:#fff;border-radius:24px;padding:26px;text-align:center;box-shadow:0 24px 80px #0004}.profile-dialog h2{margin:0 0 8px;font-size:26px}.profile-dialog p{color:var(--muted);margin:0 0 22px}.profile-choices{display:flex;gap:22px;justify-content:center;flex-wrap:wrap}.profile-choice{width:150px;height:150px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;border:3px solid #d8e9e1;background:#edf8f2;color:#164f42;padding:15px}.profile-choice strong{font-size:19px}.profile-choice span{font-size:12px;font-weight:500}.profile-choice.guest{background:#f4f6f5;color:#33443f;border-color:#e1e7e3}.profile-choice:hover{transform:translateY(-2px);box-shadow:0 8px 22px #123c341c}.profile-note{font-size:12px!important;margin-top:20px!important;margin-bottom:0!important}
 @media(max-width:780px){.stats{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.lesson-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.target{min-width:unset}}@media(max-width:480px){.wrap{padding:14px 12px 35px}.panel{padding:15px}.lesson-grid{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.stat{padding:12px}.stat strong{font-size:22px}.day{min-height:55px;padding:5px 2px}}
 </style>
 </head>
@@ -25,10 +26,22 @@ input,select,textarea{width:100%;padding:10px 11px;border:1px solid #cad8d1;bord
 <header>
  <div class="topline">
   <div class="brand">Japanese Exam Coach · Personal tracker</div>
-  <div class="target"><span>FINISH SYLLABUS BY</span><strong>07 Jan 2027</strong><span>NAT-TEST 5Q · JLPT N5 benchmark</span></div>
+  <div class="row"><button type="button" class="profile-switch" id="switchProfile">Switch profile</button><div class="target"><span>FINISH SYLLABUS BY</span><strong>07 Jan 2027</strong><span>NAT-TEST 5Q · JLPT N5 benchmark</span></div></div>
  </div>
  <div class="hero"><h1>One day at a time.<br>日本語を勉強しましょう！</h1><p>A practical beginner plan for 2 hours a day. Track your study, revise vocabulary, record mistakes and build confidence for the 5Q / N5 level.</p></div>
 </header>
+<div id="profileOverlay" class="profile-overlay" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+ <div class="profile-dialog">
+  <h2 id="profileTitle">Who's studying today?</h2>
+  <p>Choose a profile to keep study progress separate.</p>
+  <div class="profile-choices">
+   <button type="button" class="profile-choice" id="chooseDeepak"><strong>Deepak</strong><span>Cloud-synced</span></button>
+   <button type="button" class="profile-choice guest" id="chooseGuest"><strong>Guest</strong><span>This device only</span></button>
+  </div>
+  <p class="profile-note">Deepak requires the shared access code. Guest progress stays separate on this browser and is not uploaded to the cloud.</p>
+  <p id="profileError" class="profile-note" style="color:#a33"></p>
+ </div>
+</div>
 <main class="wrap">
  <section class="stats">
   <div class="stat"><small>Today's progress</small><strong id="todayPercent">0%</strong><div class="progress"><i id="todayBar"></i></div></div>
@@ -81,7 +94,9 @@ input,select,textarea{width:100%;padding:10px 11px;border:1px solid #cad8d1;bord
 
  <section id="kanji" class="tabpage hidden">
   <div class="panel">
-   <div class="row between"><div><h2>N5-level kanji flashcards</h2><p class="sub">Learn the meaning and common reading. These are beginner/N5 study targets; syllabuses can vary by exam provider.</p></div><span class="pill" id="kanjiCounter">Kanji 1</span></div>
+   <div class="row between"><div><h2>N5-level kanji flashcards</h2><p class="sub">A 200-kanji beginner study deck. JLPT does not publish an official kanji count, so treat this as a broader practice set.</p></div><span class="pill" id="kanjiCounter">Kanji 1 of 200</span></div>
+   <div class="row" id="kanjiLevels" style="margin:12px 0;gap:8px;flex-wrap:wrap"><button type="button" class="active" data-kanji-level="easy">Easy · 50</button><button type="button" class="secondary" data-kanji-level="medium">Medium · 100</button><button type="button" class="secondary" data-kanji-level="hard">Hard · All 200</button></div>
+   <p class="muted" id="kanjiLevelHint">Easy mode: first 50 core kanji.</p>
    <div class="flashcard"><div class="romaji">Kanji · meaning · reading</div><div class="jp" id="kanjiCharacter">日</div><div class="meaning" id="kanjiMeaning">day · sun</div><div class="romaji" id="kanjiReading">にち / ひ · nichi / hi</div><div class="romaji" id="kanjiExample">日本（にほん）— Japan</div></div>
    <div class="row" style="justify-content:center;margin-top:13px"><button id="kanjiReveal">Hide details</button><button class="secondary" id="kanjiKnown">I know this ✓</button><button class="secondary" id="kanjiReview">Review again</button><button class="secondary" id="kanjiNext">Next →</button></div>
    <p class="muted" style="text-align:center" id="kanjiScore">Known: 0 · Review: 0</p>
@@ -127,7 +142,7 @@ input,select,textarea{width:100%;padding:10px 11px;border:1px solid #cad8d1;bord
    <p id="cloudStatus" class="muted" role="status" aria-live="polite">Cloud connection not checked yet.</p>
    <p class="muted">If the status says Connected, your latest progress is backed up in Supabase. If it says Error, your browser still saves a local copy; see the README for setup.</p>
   </div>
-  <div class="panel"><h2>Local backup</h2><p class="sub">Download a backup file as an extra safety copy, or restore a previous backup.</p><div class="row"><button id="exportData">Download progress backup</button><label class="secondary" style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;margin:0;cursor:pointer"><input id="importFile" type="file" accept="application/json" style="width:auto"> Import backup</label></div><p id="backupStatus" class="muted"></p><hr style="border:0;border-top:1px solid var(--line);margin:18px 0"><h3>Reset this tracker</h3><p class="muted">Resetting will clear progress in this shared Demt profile for all devices. Export a backup first.</p><button class="danger" id="resetAll">Reset all saved data</button></div>
+  <div class="panel"><h2>Local backup</h2><p class="sub">Download a backup file as an extra safety copy, or restore a previous backup.</p><div class="row"><button id="exportData">Download progress backup</button><label class="secondary" style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;margin:0;cursor:pointer"><input id="importFile" type="file" accept="application/json" style="width:auto"> Import backup</label></div><p id="backupStatus" class="muted"></p><hr style="border:0;border-top:1px solid var(--line);margin:18px 0"><h3>Reset this tracker</h3><p class="muted">Resetting clears progress for the currently selected profile. Deepak cloud data may also be updated if cloud sync is connected. Export a backup first.</p><button class="danger" id="resetAll">Reset all saved data</button></div>
  </section>
  <div class="footer">Made for consistent practice · Not affiliated with the official JLPT or NAT-TEST · Keep your own exam registration and official syllabus details up to date.</div>
 </main>
@@ -178,7 +193,8 @@ const defaultTasks=[
 {title:'Textbook + exercise book',detail:'Complete Lesson 1 examples and exercises; say answers aloud.',mins:25},
 {title:'Quiz + spaced review',detail:'Take the quick quiz, write 2–3 sentences, and log mistakes.',mins:25}
 ];
-const storeKey='jpN5Journey_v1';
+let activeProfile=localStorage.getItem('jpN5ActiveProfile')||'';
+let storeKey=activeProfile==='guest'?'jpN5Journey_guest_v1':'jpN5Journey_v1';
 let data=loadData();
 data.timers = data.timers || {};
 let timerTicker = null;
@@ -235,7 +251,7 @@ function mergeCloudData(local,remote){
  ['known','review'].forEach(k=>out[k]=[...new Set([...(local?.[k]||[]),...(remote?.[k]||[])])]);
  return out;
 }
-function save(){localStorage.setItem(storeKey,JSON.stringify(data));renderStats();scheduleCloudSync();}
+function save(){localStorage.setItem(storeKey,JSON.stringify(data));renderStats();if(activeProfile==='deepak')scheduleCloudSync();}
 let cloudConnected=false, cloudBusy=false;
 const localProfileName='Demt';
 function setCloudStatus(message, ok=false){
@@ -246,7 +262,7 @@ function setCloudStatus(message, ok=false){
 async function cloudRequest(method, payload){
  let accessCode=localStorage.getItem('demtTrackerAccessCode')||'';
  if(!accessCode){
-  accessCode=prompt('Enter the shared Demt tracker access code (provided by the owner):')||'';
+  accessCode=prompt('Enter the shared Deepak tracker access code:')||'';
   if(accessCode)localStorage.setItem('demtTrackerAccessCode',accessCode);
  }
  const res=await fetch('/api/tracker',{method,headers:{'Content-Type':'application/json','x-tracker-access-code':accessCode},body:payload?JSON.stringify(payload):undefined,cache:'no-store'});
@@ -275,13 +291,14 @@ async function loadCloudData(){
  }catch(e){cloudConnected=false;console.error(e);setCloudStatus('Cloud backup error: '+e.message+'. Local progress is still saved.');}
 }
 function scheduleCloudSync(){
+ if(activeProfile!=='deepak')return;
  clearTimeout(cloudSyncTimer);
  cloudSyncTimer=setTimeout(syncToCloud,900);
 }
 let cloudSyncTimer=null;
 function attachCloudHandlers(){
- document.getElementById('testCloudConnection').onclick=()=>loadCloudData();
- document.getElementById('syncNow').onclick=()=>syncToCloud();
+ document.getElementById('testCloudConnection').onclick=()=>{if(activeProfile!=='deepak'){setCloudStatus('Select the Deepak profile to test cloud backup.');return;}loadCloudData()};
+ document.getElementById('syncNow').onclick=()=>{if(activeProfile!=='deepak'){setCloudStatus('Guest progress is local only. Select Deepak to sync to the cloud.');return;}syncToCloud()};
 }
 attachCloudHandlers();
 
@@ -312,95 +329,206 @@ function taskSet(date){
  ];
 }
 const n5Kanji=[
-['日','day · sun','にち / ひ · nichi / hi','日本（にほん）— Japan'],
-['一','one','いち · ichi','一つ（ひとつ）— one thing'],
-['二','two','に · ni','二月（にがつ）— February'],
-['三','three','さん · san','三人（さんにん）— three people'],
-['四','four','よん / し · yon / shi','四月（しがつ）— April'],
-['五','five','ご · go','五月（ごがつ）— May'],
-['六','six','ろく · roku','六月（ろくがつ）— June'],
-['七','seven','なな / しち · nana / shichi','七月（しちがつ）— July'],
-['八','eight','はち · hachi','八月（はちがつ）— August'],
-['九','nine','きゅう / く · kyuu / ku','九月（くがつ）— September'],
-['十','ten','じゅう · juu','十月（じゅうがつ）— October'],
-['百','hundred','ひゃく · hyaku','百円（ひゃくえん）— 100 yen'],
-['千','thousand','せん · sen','千円（せんえん）— 1,000 yen'],
-['万','ten thousand','まん · man','一万円（いちまんえん）— 10,000 yen'],
-['円','yen · circle','えん · en','百円（ひゃくえん）— 100 yen'],
-['年','year','ねん / とし · nen / toshi','今年（ことし）— this year'],
-['月','month · moon','げつ / つき · getsu / tsuki','月曜日（げつようび）— Monday'],
-['火','fire','か / ひ · ka / hi','火曜日（かようび）— Tuesday'],
-['水','water','すい / みず · sui / mizu','水（みず）— water'],
-['木','tree · wood','もく / き · moku / ki','木曜日（もくようび）— Thursday'],
-['金','gold · money','きん / かね · kin / kane','お金（おかね）— money'],
-['土','earth · soil','ど / つち · do / tsuchi','土曜日（どようび）— Saturday'],
-['曜','weekday','よう · you','曜日（ようび）— day of week'],
-['人','person','じん / ひと · jin / hito','日本人（にほんじん）— Japanese person'],
-['子','child','こ · ko','子ども（こども）— child'],
-['女','woman','おんな / じょ · onna / jo','女の人（おんなのひと）— woman'],
-['男','man','おとこ / だん · otoko / dan','男の人（おとこのひと）— man'],
-['父','father','ちち / とう · chichi / tou','父（ちち）— my father'],
-['母','mother','はは / かあ · haha / kaa','母（はは）— my mother'],
-['友','friend','とも · tomo','友だち（ともだち）— friend'],
-['本','book · origin','ほん · hon','本（ほん）— book'],
-['学','study · learning','がく · gaku','学生（がくせい）— student'],
-['校','school','こう · kou','学校（がっこう）— school'],
-['生','life · birth','せい / いきる · sei / ikiru','学生（がくせい）— student'],
-['先','previous · ahead','せん · sen','先生（せんせい）— teacher'],
-['名','name','な / めい · na / mei','名前（なまえ）— name'],
-['何','what','なに / なん · nani / nan','何ですか（なんですか）— what is it?'],
-['時','time · hour','じ / とき · ji / toki','三時（さんじ）— three o’clock'],
-['分','minute · part','ふん / ぶん · fun / bun','五分（ごふん）— five minutes'],
-['半','half','はん · han','半分（はんぶん）— half'],
-['今','now','いま · ima','今（いま）— now'],
-['毎','every','まい · mai','毎日（まいにち）— every day'],
-['週','week','しゅう · shuu','毎週（まいしゅう）— every week'],
-['上','up · above','うえ / じょう · ue / jou','上（うえ）— above'],
-['下','down · below','した / か · shita / ka','下（した）— below'],
-['中','inside · middle','なか / ちゅう · naka / chuu','中（なか）— inside'],
-['外','outside','そと / がい · soto / gai','外国（がいこく）— foreign country'],
-['右','right','みぎ · migi','右（みぎ）— right'],
-['左','left','ひだり · hidari','左（ひだり）— left'],
-['東','east','ひがし / とう · higashi / tou','東京（とうきょう）— Tokyo'],
-['西','west','にし / せい · nishi / sei','西（にし）— west'],
-['南','south','みなみ / なん · minami / nan','南（みなみ）— south'],
-['北','north','きた / ほく · kita / hoku','北（きた）— north'],
-['山','mountain','やま / さん · yama / san','富士山（ふじさん）— Mt. Fuji'],
-['川','river','かわ / せん · kawa / sen','川（かわ）— river'],
-['田','rice field','た / でん · ta / den','田中（たなか）— Tanaka'],
-['天','heaven · sky','てん · ten','天気（てんき）— weather'],
-['気','spirit · energy','き · ki','元気（げんき）— well/energetic'],
-['雨','rain','あめ / う · ame / u','雨（あめ）— rain'],
-['電','electricity','でん · den','電車（でんしゃ）— train'],
-['車','car · vehicle','くるま / しゃ · kuruma / sha','電車（でんしゃ）— train'],
-['駅','station','えき · eki','駅（えき）— station'],
-['国','country','くに / こく · kuni / koku','国（くに）— country'],
-['語','language · word','ご · go','日本語（にほんご）— Japanese language'],
-['行','go','いく / こう · iku / kou','行きます（いきます）— go'],
-['来','come','くる / らい · kuru / rai','来ます（きます）— come'],
-['食','eat · food','たべる / しょく · taberu / shoku','食べます（たべます）— eat'],
-['飲','drink','のむ / いん · nomu / in','飲みます（のみます）— drink'],
-['見','see · look','みる / けん · miru / ken','見ます（みます）— see'],
-['聞','hear · listen','きく / ぶん · kiku / bun','聞きます（ききます）— listen'],
-['話','speak · talk','はなす / わ · hanasu / wa','話します（はなします）— speak'],
-['読','read','よむ / どく · yomu / doku','読みます（よみます）— read'],
-['書','write','かく / しょ · kaku / sho','書きます（かきます）— write'],
-['買','buy','かう / ばい · kau / bai','買います（かいます）— buy'],
-['休','rest · holiday','やすむ / きゅう · yasumu / kyuu','休みます（やすみます）— rest'],
-['大','big','おおきい / だい · ookii / dai','大きい（おおきい）— big'],
-['小','small','ちいさい / しょう · chiisai / shou','小さい（ちいさい）— small'],
-['高','high · expensive','たかい / こう · takai / kou','高い（たかい）— high/expensive'],
-['安','cheap · safe','やすい / あん · yasui / an','安い（やすい）— cheap'],
-['新','new','あたらしい / しん · atarashii / shin','新しい（あたらしい）— new'],
-['古','old','ふるい / こ · furui / ko','古い（ふるい）— old'],
-['長','long','ながい / ちょう · nagai / chou','長い（ながい）— long'],
-['多','many','おおい / た · ooi / ta','多い（おおい）— many'],
-['少','few · little','すくない / しょう · sukunai / shou','少ない（すくない）— few'],
-['白','white','しろ / はく · shiro / haku','白い（しろい）— white'],
-['黒','black','くろ / こく · kuro / koku','黒い（くろい）— black'],
-['赤','red','あか / せき · aka / seki','赤い（あかい）— red'],
-['青','blue','あお / せい · ao / sei','青い（あおい）— blue'],
-['天','sky','てん · ten','天気（てんき）— weather']
+["日","day · sun","にち / ひ · nichi / hi","日本（にほん）— Japan"],
+["一","one","いち · ichi","一つ（ひとつ）— one thing"],
+["二","two","に · ni","二月（にがつ）— February"],
+["三","three","さん · san","三人（さんにん）— three people"],
+["四","four","よん / し · yon / shi","四月（しがつ）— April"],
+["五","five","ご · go","五月（ごがつ）— May"],
+["六","six","ろく · roku","六月（ろくがつ）— June"],
+["七","seven","なな / しち · nana / shichi","七月（しちがつ）— July"],
+["八","eight","はち · hachi","八月（はちがつ）— August"],
+["九","nine","きゅう / く · kyuu / ku","九月（くがつ）— September"],
+["十","ten","じゅう · juu","十月（じゅうがつ）— October"],
+["百","hundred","ひゃく · hyaku","百円（ひゃくえん）— 100 yen"],
+["千","thousand","せん · sen","千円（せんえん）— 1,000 yen"],
+["万","ten thousand","まん · man","一万円（いちまんえん）— 10,000 yen"],
+["円","yen · circle","えん · en","百円（ひゃくえん）— 100 yen"],
+["年","year","ねん / とし · nen / toshi","今年（ことし）— this year"],
+["月","month · moon","げつ / つき · getsu / tsuki","月曜日（げつようび）— Monday"],
+["火","fire","か / ひ · ka / hi","火曜日（かようび）— Tuesday"],
+["水","water","すい / みず · sui / mizu","水（みず）— water"],
+["木","tree · wood","もく / き · moku / ki","木曜日（もくようび）— Thursday"],
+["金","gold · money","きん / かね · kin / kane","お金（おかね）— money"],
+["土","earth · soil","ど / つち · do / tsuchi","土曜日（どようび）— Saturday"],
+["曜","weekday","よう · you","曜日（ようび）— day of week"],
+["人","person","じん / ひと · jin / hito","日本人（にほんじん）— Japanese person"],
+["子","child","こ · ko","子ども（こども）— child"],
+["女","woman","おんな / じょ · onna / jo","女の人（おんなのひと）— woman"],
+["男","man","おとこ / だん · otoko / dan","男の人（おとこのひと）— man"],
+["父","father","ちち / とう · chichi / tou","父（ちち）— my father"],
+["母","mother","はは / かあ · haha / kaa","母（はは）— my mother"],
+["友","friend","とも · tomo","友だち（ともだち）— friend"],
+["本","book · origin","ほん · hon","本（ほん）— book"],
+["学","study · learning","がく · gaku","学生（がくせい）— student"],
+["校","school","こう · kou","学校（がっこう）— school"],
+["生","life · birth","せい / いきる · sei / ikiru","学生（がくせい）— student"],
+["先","previous · ahead","せん · sen","先生（せんせい）— teacher"],
+["名","name","な / めい · na / mei","名前（なまえ）— name"],
+["何","what","なに / なん · nani / nan","何ですか（なんですか）— what is it?"],
+["時","time · hour","じ / とき · ji / toki","三時（さんじ）— three o’clock"],
+["分","minute · part","ふん / ぶん · fun / bun","五分（ごふん）— five minutes"],
+["半","half","はん · han","半分（はんぶん）— half"],
+["今","now","いま · ima","今（いま）— now"],
+["毎","every","まい · mai","毎日（まいにち）— every day"],
+["週","week","しゅう · shuu","毎週（まいしゅう）— every week"],
+["上","up · above","うえ / じょう · ue / jou","上（うえ）— above"],
+["下","down · below","した / か · shita / ka","下（した）— below"],
+["中","inside · middle","なか / ちゅう · naka / chuu","中（なか）— inside"],
+["外","outside","そと / がい · soto / gai","外国（がいこく）— foreign country"],
+["右","right","みぎ · migi","右（みぎ）— right"],
+["左","left","ひだり · hidari","左（ひだり）— left"],
+["東","east","ひがし / とう · higashi / tou","東京（とうきょう）— Tokyo"],
+["西","west","にし / せい · nishi / sei","西（にし）— west"],
+["南","south","みなみ / なん · minami / nan","南（みなみ）— south"],
+["北","north","きた / ほく · kita / hoku","北（きた）— north"],
+["山","mountain","やま / さん · yama / san","富士山（ふじさん）— Mt. Fuji"],
+["川","river","かわ / せん · kawa / sen","川（かわ）— river"],
+["田","rice field","た / でん · ta / den","田中（たなか）— Tanaka"],
+["天","heaven · sky","てん · ten","天気（てんき）— weather"],
+["気","spirit · energy","き · ki","元気（げんき）— well/energetic"],
+["雨","rain","あめ / う · ame / u","雨（あめ）— rain"],
+["電","electricity","でん · den","電車（でんしゃ）— train"],
+["車","car · vehicle","くるま / しゃ · kuruma / sha","電車（でんしゃ）— train"],
+["駅","station","えき · eki","駅（えき）— station"],
+["国","country","くに / こく · kuni / koku","国（くに）— country"],
+["語","language · word","ご · go","日本語（にほんご）— Japanese language"],
+["行","go","いく / こう · iku / kou","行きます（いきます）— go"],
+["来","come","くる / らい · kuru / rai","来ます（きます）— come"],
+["食","eat · food","たべる / しょく · taberu / shoku","食べます（たべます）— eat"],
+["飲","drink","のむ / いん · nomu / in","飲みます（のみます）— drink"],
+["見","see · look","みる / けん · miru / ken","見ます（みます）— see"],
+["聞","hear · listen","きく / ぶん · kiku / bun","聞きます（ききます）— listen"],
+["話","speak · talk","はなす / わ · hanasu / wa","話します（はなします）— speak"],
+["読","read","よむ / どく · yomu / doku","読みます（よみます）— read"],
+["書","write","かく / しょ · kaku / sho","書きます（かきます）— write"],
+["買","buy","かう / ばい · kau / bai","買います（かいます）— buy"],
+["休","rest · holiday","やすむ / きゅう · yasumu / kyuu","休みます（やすみます）— rest"],
+["大","big","おおきい / だい · ookii / dai","大きい（おおきい）— big"],
+["小","small","ちいさい / しょう · chiisai / shou","小さい（ちいさい）— small"],
+["高","high · expensive","たかい / こう · takai / kou","高い（たかい）— high/expensive"],
+["安","cheap · safe","やすい / あん · yasui / an","安い（やすい）— cheap"],
+["新","new","あたらしい / しん · atarashii / shin","新しい（あたらしい）— new"],
+["古","old","ふるい / こ · furui / ko","古い（ふるい）— old"],
+["長","long","ながい / ちょう · nagai / chou","長い（ながい）— long"],
+["多","many","おおい / た · ooi / ta","多い（おおい）— many"],
+["少","few · little","すくない / しょう · sukunai / shou","少ない（すくない）— few"],
+["白","white","しろ / はく · shiro / haku","白い（しろい）— white"],
+["黒","black","くろ / こく · kuro / koku","黒い（くろい）— black"],
+["赤","red","あか / せき · aka / seki","赤い（あかい）— red"],
+["青","blue","あお / せい · ao / sei","青い（あおい）— blue"],
+["出","exit · go out","でる / だす · deru / dasu","出ます（でます）— go out"],
+["入","enter · put in","はいる / いれる · hairu / ireru","入ります（はいります）— enter"],
+["立","stand","たつ · tatsu","立ちます（たちます）— stand"],
+["会","meet · meeting","あう / かい · au / kai","会社（かいしゃ）— company"],
+["社","company · shrine","しゃ · sha","会社（かいしゃ）— company"],
+["店","shop","みせ / てん · mise / ten","店（みせ）— shop"],
+["道","road · way","みち / どう · michi / dou","道（みち）— road"],
+["花","flower","はな · hana","花（はな）— flower"],
+["魚","fish","さかな / ぎょ · sakana / gyo","魚（さかな）— fish"],
+["肉","meat","にく · niku","肉（にく）— meat"],
+["牛","cow · beef","うし / ぎゅう · ushi / gyuu","牛（うし）— cow"],
+["鳥","bird","とり / ちょう · tori / chou","鳥（とり）— bird"],
+["犬","dog","いぬ · inu","犬（いぬ）— dog"],
+["馬","horse","うま / ば · uma / ba","馬（うま）— horse"],
+["耳","ear","みみ · mimi","耳（みみ）— ear"],
+["目","eye","め / もく · me / moku","目（め）— eye"],
+["口","mouth","くち / こう · kuchi / kou","口（くち）— mouth"],
+["手","hand","て / しゅ · te / shu","手（て）— hand"],
+["足","foot · leg","あし / そく · ashi / soku","足（あし）— foot"],
+["力","power · strength","ちから / りょく · chikara / ryoku","力（ちから）— strength"],
+["心","heart · mind","こころ / しん · kokoro / shin","心（こころ）— heart"],
+["体","body","からだ / たい · karada / tai","体（からだ）— body"],
+["頭","head","あたま / とう · atama / tou","頭（あたま）— head"],
+["顔","face","かお / がん · kao / gan","顔（かお）— face"],
+["声","voice","こえ / せい · koe / sei","声（こえ）— voice"],
+["音","sound","おと / おん · oto / on","音（おと）— sound"],
+["色","colour","いろ / しょく · iro / shoku","色（いろ）— colour"],
+["春","spring","はる / しゅん · haru / shun","春（はる）— spring"],
+["夏","summer","なつ / か · natsu / ka","夏（なつ）— summer"],
+["秋","autumn","あき / しゅう · aki / shuu","秋（あき）— autumn"],
+["冬","winter","ふゆ / とう · fuyu / tou","冬（ふゆ）— winter"],
+["朝","morning","あさ / ちょう · asa / chou","朝（あさ）— morning"],
+["昼","daytime · noon","ひる / ちゅう · hiru / chuu","昼（ひる）— daytime"],
+["夜","night","よる / や · yoru / ya","夜（よる）— night"],
+["夕","evening","ゆう · yuu","夕方（ゆうがた）— evening"],
+["方","direction · person","かた / ほう · kata / hou","あの方（あのかた）— that person"],
+["前","before · front","まえ / ぜん · mae / zen","前（まえ）— front"],
+["後","after · behind","あと / ご · ato / go","後で（あとで）— later"],
+["近","near","ちかい / きん · chikai / kin","近い（ちかい）— near"],
+["遠","far","とおい / えん · tooi / en","遠い（とおい）— far"],
+["間","between · interval","あいだ / かん · aida / kan","時間（じかん）— time"],
+["門","gate","もん · mon","門（もん）— gate"],
+["戸","door","と · to","戸（と）— door"],
+["家","house · home","いえ / か · ie / ka","家（いえ）— house"],
+["室","room","しつ · shitsu","教室（きょうしつ）— classroom"],
+["屋","shop · roof","や / おく · ya / oku","部屋（へや）— room"],
+["村","village","むら / そん · mura / son","村（むら）— village"],
+["町","town","まち / ちょう · machi / chou","町（まち）— town"],
+["市","city · market","し · shi","市（し）— city"],
+["区","ward · district","く · ku","区（く）— ward"],
+["京","capital","きょう / けい · kyou / kei","東京（とうきょう）— Tokyo"],
+["海","sea","うみ / かい · umi / kai","海（うみ）— sea"],
+["池","pond","いけ · ike","池（いけ）— pond"],
+["林","woods","はやし / りん · hayashi / rin","林（はやし）— woods"],
+["森","forest","もり / しん · mori / shin","森（もり）— forest"],
+["石","stone","いし / せき · ishi / seki","石（いし）— stone"],
+["草","grass","くさ / そう · kusa / sou","草（くさ）— grass"],
+["竹","bamboo","たけ / ちく · take / chiku","竹（たけ）— bamboo"],
+["空","sky · empty","そら / くう · sora / kuu","空（そら）— sky"],
+["光","light","ひかり / こう · hikari / kou","光（ひかり）— light"],
+["風","wind","かぜ / ふう · kaze / fuu","風（かぜ）— wind"],
+["雪","snow","ゆき / せつ · yuki / setsu","雪（ゆき）— snow"],
+["雲","cloud","くも / うん · kumo / un","雲（くも）— cloud"],
+["晴","clear weather","はれる / せい · hareru / sei","晴れ（はれ）— clear weather"],
+["晩","evening","ばん · ban","今晩（こんばん）— tonight"],
+["度","time · degree","ど / たび · do / tabi","今度（こんど）— this time"],
+["回","times · turn","かい / まわる · kai / mawaru","一回（いっかい）— once"],
+["番","number · turn","ばん · ban","一番（いちばん）— number one"],
+["計","measure · plan","けい / はかる · kei / hakaru","時計（とけい）— clock"],
+["用","use · business","よう · you","用事（ようじ）— errand"],
+["事","thing · matter","こと / じ · koto / ji","仕事（しごと）— work"],
+["仕","serve · do","し · shi","仕事（しごと）— work"],
+["作","make","つくる / さく · tsukuru / saku","作ります（つくります）— make"],
+["使","use","つかう / し · tsukau / shi","使います（つかいます）— use"],
+["持","hold · have","もつ / じ · motsu / ji","持ちます（もちます）— hold"],
+["待","wait","まつ / たい · matsu / tai","待ちます（まちます）— wait"],
+["知","know","しる / ち · shiru / chi","知ります（しります）— know"],
+["思","think","おもう / し · omou / shi","思います（おもいます）— think"],
+["考","think · consider","かんがえる / こう · kangaeru / kou","考えます（かんがえます）— consider"],
+["教","teach · tell","おしえる / きょう · oshieru / kyou","教えます（おしえます）— teach"],
+["習","learn · practise","ならう / しゅう · narau / shuu","習います（ならいます）— learn"],
+["勉","exert oneself","べん · ben","勉強（べんきょう）— study"],
+["強","strong","つよい / きょう · tsuyoi / kyou","強い（つよい）— strong"],
+["弱","weak","よわい / じゃく · yowai / jaku","弱い（よわい）— weak"],
+["早","early · fast","はやい / そう · hayai / sou","早い（はやい）— early"],
+["速","fast","はやい / そく · hayai / soku","速い（はやい）— fast"],
+["明","bright · next","あかるい / めい · akarui / mei","明日（あした）— tomorrow"],
+["暗","dark","くらい / あん · kurai / an","暗い（くらい）— dark"],
+["楽","fun · comfort","たのしい / がく · tanoshii / gaku","楽しい（たのしい）— fun"],
+["歌","song · sing","うた / うたう · uta / utau","歌（うた）— song"],
+["画","picture · stroke","が / かく · ga / kaku","映画（えいが）— movie"],
+["写","copy · photograph","うつす / しゃ · utsusu / sha","写真（しゃしん）— photo"],
+["真","true · real","ま / しん · ma / shin","写真（しゃしん）— photo"],
+["紙","paper","かみ / し · kami / shi","紙（かみ）— paper"],
+["図","diagram · map","ず / と · zu / to","地図（ちず）— map"],
+["館","building · hall","かん · kan","図書館（としょかん）— library"],
+["医","medicine · doctor","い · i","医者（いしゃ）— doctor"],
+["者","person · someone","もの / しゃ · mono / sha","医者（いしゃ）— doctor"],
+["病","illness","びょう / やむ · byou / yamu","病院（びょういん）— hospital"],
+["院","institution · hospital","いん · in","病院（びょういん）— hospital"],
+["薬","medicine","くすり / やく · kusuri / yaku","薬（くすり）— medicine"],
+["飯","cooked rice · meal","めし / はん · meshi / han","ご飯（ごはん）— meal"],
+["茶","tea","ちゃ / さ · cha / sa","お茶（おちゃ）— tea"],
+["米","rice · USA","こめ / べい · kome / bei","米（こめ）— rice"],
+["料","fee · ingredients","りょう · ryou","料理（りょうり）— cooking"],
+["理","reason · logic","り · ri","料理（りょうり）— cooking"],
+["旅","trip · travel","たび / りょ · tabi / ryo","旅行（りょこう）— travel"],
+["世","world · generation","よ / せい · yo / sei","世界（せかい）— world"],
+["界","world · boundary","かい · kai","世界（せかい）— world"],
+["地","ground · earth","ち / じ · chi / ji","地下（ちか）— underground"],
+["不","not · un-","ふ / ぶ · fu / bu","不安（ふあん）— uneasy"],
+["元","origin · healthy","もと / げん · moto / gen","元気（げんき）— healthy"],
 ];
 function renderStats(){
  let allDates=Object.keys(data.checks), logged=new Set(allDates.filter(d=>Object.values(data.checks[d]||{}).some(Boolean))).size;
@@ -450,30 +578,36 @@ function renderLessons(){
 }
 let cardIndex=0;
 function renderCard(){let v=vocab[cardIndex];document.getElementById('cardWord').textContent=v[0];document.getElementById('cardKanji').textContent=v[1]==='—'?'':v[1];document.getElementById('cardMeaning').textContent=v[3];document.getElementById('cardMeaning').classList.add('hidden');document.getElementById('cardHint').textContent='Think of the meaning, then reveal.';document.getElementById('cardCounter').textContent=`Card ${cardIndex+1} of ${vocab.length}`;document.getElementById('cardCategory').textContent='Starter vocabulary';document.getElementById('cardScore').textContent=`Known: ${data.known.length} · Review: ${data.review.length}`;document.getElementById('vocabTable').innerHTML=vocab.map(v=>`<tr><td>${v[0]}</td><td>${v[2]}</td><td>${v[3]}</td></tr>`).join('')}
-let kanjiIndex=0,kanjiReviewMode=false,kanjiRevealed=false;
+let kanjiIndex=0,kanjiReviewMode=false,kanjiRevealed=false,kanjiLevel='easy';
+function kanjiLimit(){return kanjiLevel==='easy'?50:kanjiLevel==='medium'?100:n5Kanji.length;}
+function kanjiPool(){const limit=kanjiLimit();return n5Kanji.map((_,i)=>i).filter(i=>i<limit&&(!kanjiReviewMode||(data.kanjiReview||[]).includes(i)));}
 function renderKanji(){
+ const limit=kanjiLimit(); if(kanjiIndex>=limit)kanjiIndex=0;
  const item=n5Kanji[kanjiIndex];
  document.getElementById('kanjiCharacter').textContent=item[0];
  document.getElementById('kanjiMeaning').textContent=item[1];
  document.getElementById('kanjiReading').textContent=item[2];
  document.getElementById('kanjiExample').textContent=item[3];
- document.getElementById('kanjiCounter').textContent=`Kanji ${kanjiIndex+1} of ${n5Kanji.length}`;
+ document.getElementById('kanjiCounter').textContent=`Kanji ${kanjiIndex+1} of ${limit} · ${kanjiLevel[0].toUpperCase()+kanjiLevel.slice(1)}`;
  document.getElementById('kanjiReveal').textContent=kanjiRevealed?'Hide details':'Reveal details';
  ['kanjiMeaning','kanjiReading','kanjiExample'].forEach(id=>document.getElementById(id).classList.toggle('hidden',!kanjiRevealed));
- document.getElementById('kanjiScore').textContent=`Known: ${(data.kanjiKnown||[]).length} · Review: ${(data.kanjiReview||[]).length}`;
- document.getElementById('kanjiTable').innerHTML=n5Kanji.map((k,i)=>`<tr><td class="jp">${k[0]}</td><td>${k[1]}</td><td>${k[2]}</td><td>${k[3]}</td><td>${(data.kanjiKnown||[]).includes(i)?'✓ Known':(data.kanjiReview||[]).includes(i)?'Review':'New'}</td></tr>`).join('');
+ document.getElementById('kanjiScore').textContent=`Known: ${(data.kanjiKnown||[]).length} · Review: ${(data.kanjiReview||[]).length} · Total deck: ${n5Kanji.length}`;
+ const hints={easy:'Easy mode: first 50 core kanji.',medium:'Medium mode: first 100 kanji, including the Easy set.',hard:'Hard mode: all 200 kanji in the full deck.'};document.getElementById('kanjiLevelHint').textContent=hints[kanjiLevel];
+ document.querySelectorAll('[data-kanji-level]').forEach(b=>{const active=b.dataset.kanjiLevel===kanjiLevel;b.classList.toggle('active',active);b.classList.toggle('secondary',!active)});
+ document.getElementById('kanjiTable').innerHTML=n5Kanji.slice(0,limit).map((k,i)=>`<tr><td class="jp">${k[0]}</td><td>${k[1]}</td><td>${k[2]}</td><td>${k[3]}</td><td>${(data.kanjiKnown||[]).includes(i)?'✓ Known':(data.kanjiReview||[]).includes(i)?'Review':'New'}</td></tr>`).join('');
 }
 function nextKanji(){
- const pool=kanjiReviewMode?n5Kanji.map((_,i)=>i).filter(i=>(data.kanjiReview||[]).includes(i)):n5Kanji.map((_,i)=>i);
- if(!pool.length){kanjiReviewMode=false;kanjiIndex=0;}else{let pos=pool.indexOf(kanjiIndex);kanjiIndex=pool[(pos+1+pool.length)%pool.length];}
+ const pool=kanjiPool();
+ if(!pool.length){kanjiReviewMode=false;kanjiIndex=0;alert('No kanji marked for review in this level yet.');}else{let pos=pool.indexOf(kanjiIndex);kanjiIndex=pool[(pos+1+pool.length)%pool.length];}
  kanjiRevealed=false;renderKanji();
 }
 document.getElementById('kanjiReveal').onclick=()=>{kanjiRevealed=!kanjiRevealed;renderKanji()};
 document.getElementById('kanjiKnown').onclick=()=>{data.kanjiKnown=data.kanjiKnown||[];data.kanjiReview=data.kanjiReview||[];if(!data.kanjiKnown.includes(kanjiIndex))data.kanjiKnown.push(kanjiIndex);data.kanjiReview=data.kanjiReview.filter(i=>i!==kanjiIndex);save();nextKanji()};
 document.getElementById('kanjiReview').onclick=()=>{data.kanjiReview=data.kanjiReview||[];data.kanjiKnown=data.kanjiKnown||[];if(!data.kanjiReview.includes(kanjiIndex))data.kanjiReview.push(kanjiIndex);data.kanjiKnown=data.kanjiKnown.filter(i=>i!==kanjiIndex);save();nextKanji()};
 document.getElementById('kanjiNext').onclick=()=>nextKanji();
-document.getElementById('kanjiReviewOnly').onclick=()=>{kanjiReviewMode=true;const pool=n5Kanji.map((_,i)=>i).filter(i=>(data.kanjiReview||[]).includes(i));if(!pool.length){alert('No kanji marked for review yet.');kanjiReviewMode=false;return}kanjiIndex=pool[0];kanjiRevealed=false;renderKanji()};
+document.getElementById('kanjiReviewOnly').onclick=()=>{kanjiReviewMode=true;const pool=kanjiPool();if(!pool.length){alert('No kanji marked for review yet.');kanjiReviewMode=false;return}kanjiIndex=pool[0];kanjiRevealed=false;renderKanji()};
 document.getElementById('kanjiAll').onclick=()=>{kanjiReviewMode=false;kanjiIndex=0;kanjiRevealed=false;renderKanji()};
+document.querySelectorAll('[data-kanji-level]').forEach(b=>b.addEventListener('click',()=>{kanjiLevel=b.dataset.kanjiLevel;kanjiReviewMode=false;kanjiIndex=0;kanjiRevealed=false;renderKanji()}));
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.tabpage').forEach(p=>p.classList.toggle('hidden',p.id!==b.dataset.tab));if(b.dataset.tab==='plan')renderPlan();if(b.dataset.tab==='lessons')renderLessons();if(b.dataset.tab==='vocab')renderCard();if(b.dataset.tab==='kanji')renderKanji();if(b.dataset.tab==='mistakes')renderMistakes();if(b.dataset.tab==='scores')renderScores()}));
 document.getElementById('studyDate').value=iso(new Date())>=START&&iso(new Date())<=TARGET?iso(new Date()):START;
 document.getElementById('studyDate').addEventListener('change',renderToday);
@@ -498,8 +632,35 @@ document.getElementById('importFile').addEventListener('change',async e=>{let f=
 document.getElementById('resetLessons').onclick=()=>{if(confirm('Reset all lesson completion ticks?')){data.lessons={};save();renderLessons()}};
 document.getElementById('resetAll').onclick=()=>{if(confirm('Reset all tracker progress for this browser and, if signed in, your cloud account? Download a backup first if needed.')){data=emptyData();save();renderToday();renderPlan();renderLessons();renderCard();renderKanji();renderMistakes();renderScores();document.getElementById('backupStatus').textContent='Saved progress reset.'}};
 
-renderToday();renderPlan();renderLessons();renderCard();renderKanji();renderMistakes();renderScores();runTimerTicker();
-loadCloudData();
+function renderEverything(){renderToday();renderPlan();renderLessons();renderCard();renderKanji();renderMistakes();renderScores();runTimerTicker();renderStats();}
+function setProfileBadge(){
+ const el=document.getElementById('cloudConnection');
+ const status=document.getElementById('cloudStatus');
+ if(activeProfile==='guest'){
+  if(el){el.textContent='Guest profile · Local only. This progress is separate and is not uploaded to Supabase.';el.style.borderColor='#9aa9a2';}
+  if(status)status.textContent='Guest progress is saved only in this browser. Use Switch profile to return to Deepak.';
+ }else if(activeProfile==='deepak'){
+  if(el)el.textContent='Deepak profile · Checking cloud backup connection…';
+  if(status)status.textContent='Deepak progress is stored locally and will sync to Supabase when connected.';
+ }
+}
+function chooseProfile(profile){
+ if(profile==='deepak'){
+  let code=prompt('Deepak profile: enter the shared tracker access code.');
+  if(!code){document.getElementById('profileError').textContent='Access code is required for the Deepak profile.';return;}
+  localStorage.setItem('demtTrackerAccessCode',code.trim());
+ }
+ activeProfile=profile;localStorage.setItem('jpN5ActiveProfile',profile);storeKey=profile==='guest'?'jpN5Journey_guest_v1':'jpN5Journey_v1';data=loadData();data.timers=data.timers||{};
+ document.getElementById('profileOverlay').classList.add('hidden');
+ renderEverything();setProfileBadge();
+ if(profile==='deepak')loadCloudData();
+}
+document.getElementById('chooseDeepak').addEventListener('click',()=>chooseProfile('deepak'));
+document.getElementById('chooseGuest').addEventListener('click',()=>chooseProfile('guest'));
+document.getElementById('switchProfile').addEventListener('click',()=>{document.getElementById('profileError').textContent='';document.getElementById('profileOverlay').classList.remove('hidden')});
+renderEverything();
+if(!activeProfile){document.getElementById('profileOverlay').classList.remove('hidden');}
+else {document.getElementById('profileOverlay').classList.add('hidden');setProfileBadge();if(activeProfile==='deepak')loadCloudData();}
 </script>
 </body>
 </html>
