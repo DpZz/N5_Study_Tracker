@@ -163,3 +163,14 @@ The app merges local progress with the shared profile when it first loads and th
 
 ## Profile selector
 On first visit, choose **Deepak** to use the shared cloud-backed profile (requires the `DEMT_ACCESS_CODE`) or **Guest** to use a separate local-only profile. Guest progress is saved in that browser and is not synced to Supabase. Use **Switch profile** in the header to change profiles.
+
+
+## Version 2 additions
+- Lesson Tests: lesson selector, full-bank/review/random modes, score feedback, and missed-word tracking in local browser storage.
+- Listening Lab: browser-generated Japanese speech, level groups, speed control, comprehension questions, and transcript reveal.
+- The uploaded PDF is the 1998 *Minna no Nihongo I Translation & Grammatical Notes* edition. The included lesson vocabulary is a curated starter bank and is **not yet verified as a complete transcription of every vocabulary item**. To guarantee complete book coverage, each lesson list needs a page-by-page validation pass.
+- The Google Drive listening file could not be imported from the link in this environment. Upload the audio files or listening textbook PDF directly to the chat to add its actual tracks/exercises. The Listening Lab currently uses browser speech synthesis, not official textbook audio.
+
+
+## Version 2 vocabulary and listening notes
+The lesson tests use lesson-specific vocabulary banks for Lessons 1–25. See `TEST-REPORT.md` for actual per-lesson counts and limitations. The current Listening Lab uses browser speech synthesis with comprehension questions; it does not yet link each supplied MP3 to a lesson.

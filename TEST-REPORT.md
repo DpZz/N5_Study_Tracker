@@ -1,17 +1,56 @@
-# Test report — Profile selector update
+# Version 2 Test Report — Japanese N5 Tracker
 
-## Implemented
-- First visit asks “Who's studying today?” with two round profile choices: Deepak and Guest.
-- Deepak requires the shared tracker access code and continues to use the existing `jpN5Journey_v1` local data key and Supabase-backed Demt cloud profile.
-- Guest uses a separate `jpN5Journey_guest_v1` local-storage key and never automatically syncs to the shared cloud profile.
-- The header includes a Switch profile button.
-- Cloud Test connection and Sync now actions are restricted to the Deepak profile.
-- Profile selection persists in the browser so the chooser is not shown on every visit.
+## Build contents
+- `index.html`: study tracker with lesson vocabulary, per-lesson tests, listening lab, kanji practice, progress tracking and local backup controls.
+- `api/tracker.js`: server-side Supabase API for the Deepak profile.
+- `README.md`: Vercel/Supabase setup and deployment instructions.
 
-## Checks performed
-- Extracted the main inline JavaScript and ran `node --check`: passed.
-- Confirmed profile keys and cloud gating in the source.
+## Automated checks
+- Inline JavaScript block 1: **PASS**
+- 25 lesson vocabulary arrays: **PASS**
+- each lesson has vocabulary entries: **PASS**
+- lesson test selectors and controls: **PASS**
+- missed-word review saved per profile: **PASS**
+- listening exercise controls: **PASS**
+- profile selector and cloud API present: **PASS**
+- 200-kanji deck present: **PASS** (array contains 200 entries)
+- local backup import/export controls: **PASS**
 
-## Not verified
-- No live Vercel deployment or real Supabase connection was performed in this environment.
-- Please deploy the project and test both profiles in a browser. Guest is local to that browser/device; it is not a cloud-backed multi-device guest account.
+## Vocabulary coverage snapshot
+
+| Lesson | Entries in practice bank |
+|---:|---:|
+| 1 | 31 |
+| 2 | 45 |
+| 3 | 42 |
+| 4 | 43 |
+| 5 | 50 |
+| 6 | 44 |
+| 7 | 44 |
+| 8 | 49 |
+| 9 | 44 |
+| 10 | 38 |
+| 11 | 45 |
+| 12 | 51 |
+| 13 | 35 |
+| 14 | 34 |
+| 15 | 26 |
+| 16 | 36 |
+| 17 | 33 |
+| 18 | 27 |
+| 19 | 30 |
+| 20 | 27 |
+| 21 | 31 |
+| 22 | 21 |
+| 23 | 28 |
+| 24 | 21 |
+| 25 | 23 |
+
+Total entries across lesson banks (duplicates across different lessons may occur): **898**.
+
+## Important source and testing limitations
+- Vocabulary was compiled from the lesson-page images supplied in this conversation, with additional entries added for all 25 lessons. The app provides lesson-specific tests that draw from the current lesson bank.
+- This is **not certified as a complete word-for-word transcription of every vocabulary item and every dialogue expression on all textbook pages**. Some small or unclear print may be omitted or need checking against the physical book. The per-lesson counts above are the actual current practice-bank counts.
+- Listening Lab currently uses browser Japanese speech synthesis and in-page comprehension prompts; it does not yet map the supplied MP3 collection to specific lesson numbers. Browser Japanese voice availability varies by device.
+- Syntax checks and source-level UI checks were performed. No real browser automation, live Vercel deployment, Supabase credentials, or cross-device sync test was available in this build environment.
+- Keep a local backup before replacing Version 1. After deployment, test both Deepak and Guest profiles, a lesson test, listening playback, and backup export/import.
