@@ -109,7 +109,7 @@ Choose Production (and Preview too if you want preview deployments to work), sav
 
 # Japanese N5 Tracker — Demt shared profile (Vercel + Supabase)
 
-This build removes email/password sign-in. All devices use one shared profile named **Demt**. A shared access code is requested once per browser and saved locally so you do not need to sign in on every visit.
+This build removes email/password sign-in and adds a dedicated N5-level kanji flashcard section. It includes a daily plan with visible study tasks and separate kanji known/review progress. All devices use one shared profile named **Demt**. A shared access code is requested once per browser and saved locally so you do not need to sign in on every visit.
 
 ## Important privacy note
 This is a shared profile, not per-user private storage. Anyone who has both the website URL and the shared access code can view or overwrite the shared tracker data. Choose a strong, non-obvious access code and share it only with people you trust. Do not put the Supabase service-role key in browser code or public GitHub files.
@@ -124,7 +124,7 @@ create table if not exists public.tracker_shared_data (
   updated_at timestamptz not null default now()
 );
 
-alter table public.tracker_data enable row level security;
+alter table public.tracker_shared_data enable row level security;
 ```
 
 The Vercel API uses the service-role key server-side, so it can access this table despite RLS. Do not add a policy that exposes this table to `anon` or `authenticated`. If an earlier user-based `tracker_data` table exists with `user_id` as its primary key, back it up first and migrate/create a separate table with `profile` as the primary key.
@@ -158,4 +158,4 @@ Do not deploy only `index.html`, because the API endpoint is required for cloud 
 - Local storage continues to save when cloud backup is unavailable. Export a JSON backup periodically.
 
 ## Data sync note
-The app merges local progress with the shared profile when it first loads and then uploads changes. Since this is one shared profile, avoid editing the same task or score on two devices simultaneously while offline.
+The app merges local progress with the shared profile when it first loads and then uploads changes. Kanji known/review progress is stored in the shared tracker data as well. Since this is one shared profile, avoid editing the same task or score on two devices simultaneously while offline.

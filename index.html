@@ -37,7 +37,7 @@ input,select,textarea{width:100%;padding:10px 11px;border:1px solid #cad8d1;bord
   <div class="stat"><small>Days until target</small><strong id="daysLeft">—</strong><small>Target: 7 January 2027</small></div>
  </section>
  <nav class="tabs" aria-label="Website sections">
-  <button class="active" data-tab="today">Today</button><button data-tab="plan">Full plan</button><button data-tab="lessons">Lessons</button><button data-tab="vocab">Flashcards</button><button data-tab="quiz">Quick quiz</button><button data-tab="mistakes">Mistake log</button><button data-tab="scores">Mock scores</button><button data-tab="backup">Backup</button>
+  <button class="active" data-tab="today">Today</button><button data-tab="plan">Full plan</button><button data-tab="lessons">Lessons</button><button data-tab="vocab">Flashcards</button><button data-tab="kanji">N5 Kanji</button><button data-tab="quiz">Quick quiz</button><button data-tab="mistakes">Mistake log</button><button data-tab="scores">Mock scores</button><button data-tab="backup">Backup</button>
  </nav>
 
  <section id="today" class="tabpage">
@@ -77,6 +77,17 @@ input,select,textarea{width:100%;padding:10px 11px;border:1px solid #cad8d1;bord
    <p class="muted" style="text-align:center" id="cardScore">Known: 0 · Review: 0</p>
   </div>
   <div class="panel"><h2>Lesson 1 vocabulary list</h2><div class="tablewrap"><table><thead><tr><th>Japanese</th><th>Reading</th><th>Meaning</th></tr></thead><tbody id="vocabTable"></tbody></table></div></div>
+ </section>
+
+ <section id="kanji" class="tabpage hidden">
+  <div class="panel">
+   <div class="row between"><div><h2>N5-level kanji flashcards</h2><p class="sub">Learn the meaning and common reading. These are beginner/N5 study targets; syllabuses can vary by exam provider.</p></div><span class="pill" id="kanjiCounter">Kanji 1</span></div>
+   <div class="flashcard"><div class="romaji">Kanji · meaning · reading</div><div class="jp" id="kanjiCharacter">日</div><div class="meaning" id="kanjiMeaning">day · sun</div><div class="romaji" id="kanjiReading">にち / ひ · nichi / hi</div><div class="romaji" id="kanjiExample">日本（にほん）— Japan</div></div>
+   <div class="row" style="justify-content:center;margin-top:13px"><button id="kanjiReveal">Hide details</button><button class="secondary" id="kanjiKnown">I know this ✓</button><button class="secondary" id="kanjiReview">Review again</button><button class="secondary" id="kanjiNext">Next →</button></div>
+   <p class="muted" style="text-align:center" id="kanjiScore">Known: 0 · Review: 0</p>
+   <div class="row"><button class="secondary" id="kanjiReviewOnly">Review marked kanji</button><button class="secondary" id="kanjiAll">All kanji</button></div>
+  </div>
+  <div class="panel"><h2>Kanji list</h2><p class="sub">Use this as a recall checklist alongside your textbook and exam materials.</p><div class="tablewrap"><table><thead><tr><th>Kanji</th><th>Meaning</th><th>Common reading</th><th>Example</th><th>Status</th></tr></thead><tbody id="kanjiTable"></tbody></table></div></div>
  </section>
 
  <section id="quiz" class="tabpage hidden">
@@ -258,7 +269,7 @@ async function loadCloudData(){
   const result=await cloudRequest('GET');
   if(result.data)data=mergeCloudData(data,result.data);
   localStorage.setItem(storeKey,JSON.stringify(data));
-  renderToday();renderPlan();renderLessons();renderCard();renderMistakes();renderScores();renderStats();runTimerTicker();
+  renderToday();renderPlan();renderLessons();renderCard();renderKanji();renderMistakes();renderScores();renderStats();runTimerTicker();
   await cloudRequest('PUT',{data,profile:localProfileName});
   cloudConnected=true;setCloudStatus('Connected. Demt profile is synced with Supabase.',true);
  }catch(e){cloudConnected=false;console.error(e);setCloudStatus('Cloud backup error: '+e.message+'. Local progress is still saved.');}
@@ -276,12 +287,127 @@ attachCloudHandlers();
 
 
 
+// Core date/plan helpers (kept in the main script so the page can render on first load).
+function parseDate(value){const [y,m,d]=String(value).split('-').map(Number);return new Date(y,m-1,d,12,0,0,0)}
+function iso(date){return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`}
+function daysBetween(a,b){return Math.round((parseDate(b)-parseDate(a))/86400000)}
+function fmtDate(value){return parseDate(value).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}
+function phaseFor(date){return phases.find(p=>date>=p.from&&date<=p.to)||phases[phases.length-1]}
+function lessonForDate(date){
+ const offset=Math.max(0,daysBetween(START,date));
+ if(offset<=13)return Math.min(6,1+Math.floor(offset/2.4));
+ if(offset<=33)return Math.min(15,7+Math.floor((offset-14)/2.2));
+ if(offset<=53)return Math.min(25,16+Math.floor((offset-34)/2));
+ return Math.min(25,25);
+}
+function taskSet(date){
+ const lessonNo=lessonForDate(date), lesson=lessons[lessonNo-1];
+ return [
+  {title:'Kana warm-up',detail:'Read hiragana and katakana aloud; practise the rows you hesitate on.',mins:15},
+  {title:`Minna no Nihongo · ${lesson[0]}`,detail:`Study ${lesson[1]}. Read the grammar explanations and say examples aloud.`,mins:30},
+  {title:'Vocabulary recall',detail:`Learn 8–10 words from ${lesson[0]}; practise Japanese → meaning and meaning → Japanese.`,mins:20},
+  {title:'Textbook + exercise book',detail:`Complete the exercises for ${lesson[0]}; check and correct your answers.`,mins:25},
+  {title:'Kanji + listening review',detail:'Review 5 kanji flashcards and practise beginner Japanese listening.',mins:20},
+  {title:'Quick quiz + mistake review',detail:'Take the quiz or review saved mistakes; write one thing to revisit tomorrow.',mins:10}
+ ];
+}
+const n5Kanji=[
+['日','day · sun','にち / ひ · nichi / hi','日本（にほん）— Japan'],
+['一','one','いち · ichi','一つ（ひとつ）— one thing'],
+['二','two','に · ni','二月（にがつ）— February'],
+['三','three','さん · san','三人（さんにん）— three people'],
+['四','four','よん / し · yon / shi','四月（しがつ）— April'],
+['五','five','ご · go','五月（ごがつ）— May'],
+['六','six','ろく · roku','六月（ろくがつ）— June'],
+['七','seven','なな / しち · nana / shichi','七月（しちがつ）— July'],
+['八','eight','はち · hachi','八月（はちがつ）— August'],
+['九','nine','きゅう / く · kyuu / ku','九月（くがつ）— September'],
+['十','ten','じゅう · juu','十月（じゅうがつ）— October'],
+['百','hundred','ひゃく · hyaku','百円（ひゃくえん）— 100 yen'],
+['千','thousand','せん · sen','千円（せんえん）— 1,000 yen'],
+['万','ten thousand','まん · man','一万円（いちまんえん）— 10,000 yen'],
+['円','yen · circle','えん · en','百円（ひゃくえん）— 100 yen'],
+['年','year','ねん / とし · nen / toshi','今年（ことし）— this year'],
+['月','month · moon','げつ / つき · getsu / tsuki','月曜日（げつようび）— Monday'],
+['火','fire','か / ひ · ka / hi','火曜日（かようび）— Tuesday'],
+['水','water','すい / みず · sui / mizu','水（みず）— water'],
+['木','tree · wood','もく / き · moku / ki','木曜日（もくようび）— Thursday'],
+['金','gold · money','きん / かね · kin / kane','お金（おかね）— money'],
+['土','earth · soil','ど / つち · do / tsuchi','土曜日（どようび）— Saturday'],
+['曜','weekday','よう · you','曜日（ようび）— day of week'],
+['人','person','じん / ひと · jin / hito','日本人（にほんじん）— Japanese person'],
+['子','child','こ · ko','子ども（こども）— child'],
+['女','woman','おんな / じょ · onna / jo','女の人（おんなのひと）— woman'],
+['男','man','おとこ / だん · otoko / dan','男の人（おとこのひと）— man'],
+['父','father','ちち / とう · chichi / tou','父（ちち）— my father'],
+['母','mother','はは / かあ · haha / kaa','母（はは）— my mother'],
+['友','friend','とも · tomo','友だち（ともだち）— friend'],
+['本','book · origin','ほん · hon','本（ほん）— book'],
+['学','study · learning','がく · gaku','学生（がくせい）— student'],
+['校','school','こう · kou','学校（がっこう）— school'],
+['生','life · birth','せい / いきる · sei / ikiru','学生（がくせい）— student'],
+['先','previous · ahead','せん · sen','先生（せんせい）— teacher'],
+['名','name','な / めい · na / mei','名前（なまえ）— name'],
+['何','what','なに / なん · nani / nan','何ですか（なんですか）— what is it?'],
+['時','time · hour','じ / とき · ji / toki','三時（さんじ）— three o’clock'],
+['分','minute · part','ふん / ぶん · fun / bun','五分（ごふん）— five minutes'],
+['半','half','はん · han','半分（はんぶん）— half'],
+['今','now','いま · ima','今（いま）— now'],
+['毎','every','まい · mai','毎日（まいにち）— every day'],
+['週','week','しゅう · shuu','毎週（まいしゅう）— every week'],
+['上','up · above','うえ / じょう · ue / jou','上（うえ）— above'],
+['下','down · below','した / か · shita / ka','下（した）— below'],
+['中','inside · middle','なか / ちゅう · naka / chuu','中（なか）— inside'],
+['外','outside','そと / がい · soto / gai','外国（がいこく）— foreign country'],
+['右','right','みぎ · migi','右（みぎ）— right'],
+['左','left','ひだり · hidari','左（ひだり）— left'],
+['東','east','ひがし / とう · higashi / tou','東京（とうきょう）— Tokyo'],
+['西','west','にし / せい · nishi / sei','西（にし）— west'],
+['南','south','みなみ / なん · minami / nan','南（みなみ）— south'],
+['北','north','きた / ほく · kita / hoku','北（きた）— north'],
+['山','mountain','やま / さん · yama / san','富士山（ふじさん）— Mt. Fuji'],
+['川','river','かわ / せん · kawa / sen','川（かわ）— river'],
+['田','rice field','た / でん · ta / den','田中（たなか）— Tanaka'],
+['天','heaven · sky','てん · ten','天気（てんき）— weather'],
+['気','spirit · energy','き · ki','元気（げんき）— well/energetic'],
+['雨','rain','あめ / う · ame / u','雨（あめ）— rain'],
+['電','electricity','でん · den','電車（でんしゃ）— train'],
+['車','car · vehicle','くるま / しゃ · kuruma / sha','電車（でんしゃ）— train'],
+['駅','station','えき · eki','駅（えき）— station'],
+['国','country','くに / こく · kuni / koku','国（くに）— country'],
+['語','language · word','ご · go','日本語（にほんご）— Japanese language'],
+['行','go','いく / こう · iku / kou','行きます（いきます）— go'],
+['来','come','くる / らい · kuru / rai','来ます（きます）— come'],
+['食','eat · food','たべる / しょく · taberu / shoku','食べます（たべます）— eat'],
+['飲','drink','のむ / いん · nomu / in','飲みます（のみます）— drink'],
+['見','see · look','みる / けん · miru / ken','見ます（みます）— see'],
+['聞','hear · listen','きく / ぶん · kiku / bun','聞きます（ききます）— listen'],
+['話','speak · talk','はなす / わ · hanasu / wa','話します（はなします）— speak'],
+['読','read','よむ / どく · yomu / doku','読みます（よみます）— read'],
+['書','write','かく / しょ · kaku / sho','書きます（かきます）— write'],
+['買','buy','かう / ばい · kau / bai','買います（かいます）— buy'],
+['休','rest · holiday','やすむ / きゅう · yasumu / kyuu','休みます（やすみます）— rest'],
+['大','big','おおきい / だい · ookii / dai','大きい（おおきい）— big'],
+['小','small','ちいさい / しょう · chiisai / shou','小さい（ちいさい）— small'],
+['高','high · expensive','たかい / こう · takai / kou','高い（たかい）— high/expensive'],
+['安','cheap · safe','やすい / あん · yasui / an','安い（やすい）— cheap'],
+['新','new','あたらしい / しん · atarashii / shin','新しい（あたらしい）— new'],
+['古','old','ふるい / こ · furui / ko','古い（ふるい）— old'],
+['長','long','ながい / ちょう · nagai / chou','長い（ながい）— long'],
+['多','many','おおい / た · ooi / ta','多い（おおい）— many'],
+['少','few · little','すくない / しょう · sukunai / shou','少ない（すくない）— few'],
+['白','white','しろ / はく · shiro / haku','白い（しろい）— white'],
+['黒','black','くろ / こく · kuro / koku','黒い（くろい）— black'],
+['赤','red','あか / せき · aka / seki','赤い（あかい）— red'],
+['青','blue','あお / せい · ao / sei','青い（あおい）— blue'],
+['天','sky','てん · ten','天気（てんき）— weather']
+];
 function renderStats(){
  let allDates=Object.keys(data.checks), logged=new Set(allDates.filter(d=>Object.values(data.checks[d]||{}).some(Boolean))).size;
  let all=0,done=0;let today=document.getElementById('studyDate')?.value||START;
  for(let i=0;i<=daysBetween(START,TARGET);i++){let d=iso(new Date(parseDate(START).getTime()+i*86400000));let ts=taskSet(d);all+=ts.length;done+=ts.filter((t,j)=>getTimer(`${d}_${j}`,t.mins).completed||data.checks[d]?.[j]).length}
  let tasks=taskSet(today),td=tasks.filter((t,i)=>getTimer(`${today}_${i}`,t.mins).completed||data.checks[today]?.[i]).length;
- document.getElementById('todayPercent').textContent=Math.round(td/tasks.length*100)+'%';document.getElementById('todayBar').style.width=(td/tasks.length*100)+'%';
+ document.getElementById('todayPercent').textContent=Math.round(td/Math.max(1,tasks.length)*100)+'%';document.getElementById('todayBar').style.width=(td/Math.max(1,tasks.length)*100)+'%';
  document.getElementById('overallPercent').textContent=Math.round(done/all*100)+'%';document.getElementById('overallBar').style.width=(done/all*100)+'%';
  document.getElementById('daysLogged').textContent=logged;document.getElementById('daysLeft').textContent=Math.max(0,daysBetween(today,TARGET));
 }
@@ -324,7 +450,31 @@ function renderLessons(){
 }
 let cardIndex=0;
 function renderCard(){let v=vocab[cardIndex];document.getElementById('cardWord').textContent=v[0];document.getElementById('cardKanji').textContent=v[1]==='—'?'':v[1];document.getElementById('cardMeaning').textContent=v[3];document.getElementById('cardMeaning').classList.add('hidden');document.getElementById('cardHint').textContent='Think of the meaning, then reveal.';document.getElementById('cardCounter').textContent=`Card ${cardIndex+1} of ${vocab.length}`;document.getElementById('cardCategory').textContent='Starter vocabulary';document.getElementById('cardScore').textContent=`Known: ${data.known.length} · Review: ${data.review.length}`;document.getElementById('vocabTable').innerHTML=vocab.map(v=>`<tr><td>${v[0]}</td><td>${v[2]}</td><td>${v[3]}</td></tr>`).join('')}
-document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.tabpage').forEach(p=>p.classList.toggle('hidden',p.id!==b.dataset.tab));if(b.dataset.tab==='plan')renderPlan();if(b.dataset.tab==='lessons')renderLessons();if(b.dataset.tab==='vocab')renderCard();if(b.dataset.tab==='mistakes')renderMistakes();if(b.dataset.tab==='scores')renderScores()}));
+let kanjiIndex=0,kanjiReviewMode=false,kanjiRevealed=false;
+function renderKanji(){
+ const item=n5Kanji[kanjiIndex];
+ document.getElementById('kanjiCharacter').textContent=item[0];
+ document.getElementById('kanjiMeaning').textContent=item[1];
+ document.getElementById('kanjiReading').textContent=item[2];
+ document.getElementById('kanjiExample').textContent=item[3];
+ document.getElementById('kanjiCounter').textContent=`Kanji ${kanjiIndex+1} of ${n5Kanji.length}`;
+ document.getElementById('kanjiReveal').textContent=kanjiRevealed?'Hide details':'Reveal details';
+ ['kanjiMeaning','kanjiReading','kanjiExample'].forEach(id=>document.getElementById(id).classList.toggle('hidden',!kanjiRevealed));
+ document.getElementById('kanjiScore').textContent=`Known: ${(data.kanjiKnown||[]).length} · Review: ${(data.kanjiReview||[]).length}`;
+ document.getElementById('kanjiTable').innerHTML=n5Kanji.map((k,i)=>`<tr><td class="jp">${k[0]}</td><td>${k[1]}</td><td>${k[2]}</td><td>${k[3]}</td><td>${(data.kanjiKnown||[]).includes(i)?'✓ Known':(data.kanjiReview||[]).includes(i)?'Review':'New'}</td></tr>`).join('');
+}
+function nextKanji(){
+ const pool=kanjiReviewMode?n5Kanji.map((_,i)=>i).filter(i=>(data.kanjiReview||[]).includes(i)):n5Kanji.map((_,i)=>i);
+ if(!pool.length){kanjiReviewMode=false;kanjiIndex=0;}else{let pos=pool.indexOf(kanjiIndex);kanjiIndex=pool[(pos+1+pool.length)%pool.length];}
+ kanjiRevealed=false;renderKanji();
+}
+document.getElementById('kanjiReveal').onclick=()=>{kanjiRevealed=!kanjiRevealed;renderKanji()};
+document.getElementById('kanjiKnown').onclick=()=>{data.kanjiKnown=data.kanjiKnown||[];data.kanjiReview=data.kanjiReview||[];if(!data.kanjiKnown.includes(kanjiIndex))data.kanjiKnown.push(kanjiIndex);data.kanjiReview=data.kanjiReview.filter(i=>i!==kanjiIndex);save();nextKanji()};
+document.getElementById('kanjiReview').onclick=()=>{data.kanjiReview=data.kanjiReview||[];data.kanjiKnown=data.kanjiKnown||[];if(!data.kanjiReview.includes(kanjiIndex))data.kanjiReview.push(kanjiIndex);data.kanjiKnown=data.kanjiKnown.filter(i=>i!==kanjiIndex);save();nextKanji()};
+document.getElementById('kanjiNext').onclick=()=>nextKanji();
+document.getElementById('kanjiReviewOnly').onclick=()=>{kanjiReviewMode=true;const pool=n5Kanji.map((_,i)=>i).filter(i=>(data.kanjiReview||[]).includes(i));if(!pool.length){alert('No kanji marked for review yet.');kanjiReviewMode=false;return}kanjiIndex=pool[0];kanjiRevealed=false;renderKanji()};
+document.getElementById('kanjiAll').onclick=()=>{kanjiReviewMode=false;kanjiIndex=0;kanjiRevealed=false;renderKanji()};
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.tabpage').forEach(p=>p.classList.toggle('hidden',p.id!==b.dataset.tab));if(b.dataset.tab==='plan')renderPlan();if(b.dataset.tab==='lessons')renderLessons();if(b.dataset.tab==='vocab')renderCard();if(b.dataset.tab==='kanji')renderKanji();if(b.dataset.tab==='mistakes')renderMistakes();if(b.dataset.tab==='scores')renderScores()}));
 document.getElementById('studyDate').value=iso(new Date())>=START&&iso(new Date())<=TARGET?iso(new Date()):START;
 document.getElementById('studyDate').addEventListener('change',renderToday);
 document.getElementById('markAll').onclick=()=>{let d=document.getElementById('studyDate').value;data.checks[d]=data.checks[d]||{};taskSet(d).forEach((t,i)=>{data.checks[d][i]=true;const id=`${d}_${i}`;if(data.timers[id]?.running){data.timers[id].running=false;data.timers[id].remaining=Math.max(0,Math.ceil((data.timers[id].endsAt-Date.now())/1000));delete data.timers[id].endsAt;}});save();renderToday();runTimerTicker()};
@@ -346,9 +496,9 @@ function renderScores(){document.getElementById('scoreRows').innerHTML=data.scor
 document.getElementById('exportData').onclick=()=>{let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='japanese-n5-progress-backup.json';a.click();URL.revokeObjectURL(a.href);document.getElementById('backupStatus').textContent='Backup downloaded.'};
 document.getElementById('importFile').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;try{let obj=JSON.parse(await f.text());if(!obj.checks||!obj.notes||!obj.lessons)throw Error('Invalid backup');data={...data,...obj};save();renderToday();renderLessons();renderMistakes();renderScores();document.getElementById('backupStatus').textContent='Backup imported locally'+(cloudConnected?'; cloud sync queued.':'.')}catch(err){document.getElementById('backupStatus').textContent='Could not import this file. Please select a tracker JSON backup.'}e.target.value=''});
 document.getElementById('resetLessons').onclick=()=>{if(confirm('Reset all lesson completion ticks?')){data.lessons={};save();renderLessons()}};
-document.getElementById('resetAll').onclick=()=>{if(confirm('Reset all tracker progress for this browser and, if signed in, your cloud account? Download a backup first if needed.')){data=emptyData();save();renderToday();renderPlan();renderLessons();renderCard();renderMistakes();renderScores();document.getElementById('backupStatus').textContent='Saved progress reset.'}};
+document.getElementById('resetAll').onclick=()=>{if(confirm('Reset all tracker progress for this browser and, if signed in, your cloud account? Download a backup first if needed.')){data=emptyData();save();renderToday();renderPlan();renderLessons();renderCard();renderKanji();renderMistakes();renderScores();document.getElementById('backupStatus').textContent='Saved progress reset.'}};
 
-renderToday();renderPlan();renderLessons();renderCard();renderMistakes();renderScores();runTimerTicker();
+renderToday();renderPlan();renderLessons();renderCard();renderKanji();renderMistakes();renderScores();runTimerTicker();
 loadCloudData();
 </script>
 </body>
