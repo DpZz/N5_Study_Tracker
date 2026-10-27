@@ -111,7 +111,7 @@ input,select,textarea{width:100%;padding:10px 11px;border:1px solid #cad8d1;bord
   <div class="panel">
    <h2>Cloud sync with Supabase</h2>
    <p class="sub">Sign in with the same account on each device to sync mock scores, lessons, tasks, notes and other tracker progress. Your browser keeps a local copy too.</p>
-   <div class="notice">First-time setup: create a Supabase project, run the SQL in the included README, then enter your Project URL and publishable/anon key below. Never enter a service-role key here.</div>
+   <div class="notice">On Vercel, add SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY in Project Settings → Environment Variables, then redeploy. The fields below are a fallback for local testing. Never use a service-role/secret key in this website.</div>
    <div class="formgrid">
     <div><label for="supabaseUrl">Supabase Project URL</label><input id="supabaseUrl" type="url" placeholder="https://your-project.supabase.co" autocomplete="url"></div>
     <div><label for="supabaseKey">Supabase publishable / anon key</label><input id="supabaseKey" type="password" placeholder="sb_publishable_... or legacy anon key" autocomplete="off"></div>
@@ -127,7 +127,7 @@ input,select,textarea{width:100%;padding:10px 11px;border:1px solid #cad8d1;bord
    <p id="cloudStatus" class="muted" role="status" aria-live="polite">Cloud sync is not configured.</p>
   </div>
   <div class="panel"><h2>Local backup</h2><p class="sub">Cloud sync is optional. You can also export a backup or import one from another device.</p><div class="row"><button id="exportData">Download progress backup</button><label class="secondary" style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;margin:0;cursor:pointer"><input id="importFile" type="file" accept="application/json" style="width:auto"> Import backup</label></div><p id="backupStatus" class="muted"></p><hr style="border:0;border-top:1px solid var(--line);margin:18px 0"><h3>Reset this tracker</h3><p class="muted">This resets the progress stored for the signed-in account as well as this browser. Download a backup first if you want to keep it.</p><button class="danger" id="resetAll">Reset all saved data</button></div>
-  <div class="panel"><h2>Hosting notes</h2><ol><li>Deploy the folder containing <code>index.html</code> to Vercel.</li><li>Configure Supabase and run the SQL in the README once per project.</li><li>On each device, open the deployed site, enter the same Project URL and publishable/anon key, and sign in using the same account.</li><li>Keep your Supabase service-role key private; it must never be placed in this website.</li></ol><div class="notice">Local storage is still used as a local cache. Cloud sync works when online and signed in.</div></div>
+  <div class="panel"><h2>Hosting notes</h2><ol><li>Deploy the complete folder, including <code>api/config.js</code>, to Vercel.</li><li>Add <code>SUPABASE_URL</code> and <code>SUPABASE_PUBLISHABLE_KEY</code> in Vercel Environment Variables, then redeploy.</li><li>Run the SQL in the README once per Supabase project.</li><li>On each device, open the site and sign in using the same account.</li><li>Keep your Supabase service-role key private; it must never be placed in this website.</li></ol><div class="notice">Local storage is still used as a local cache. Cloud sync works when online and signed in.</div></div>
  </section>
  <div class="footer">Made for consistent practice · Not affiliated with the official JLPT or NAT-TEST · Keep your own exam registration and official syllabus details up to date.</div>
 </main>
@@ -229,110 +229,89 @@ let supabaseClient=null, cloudUser=null, cloudSyncTimer=null, cloudWriteInProgre
 const cloudConfigKey='jpN5Journey_supabase_config_v1';
 function getCloudConfig(){try{return JSON.parse(localStorage.getItem(cloudConfigKey)||'{}')}catch(e){return {}}}
 function setCloudStatus(message){const el=document.getElementById('cloudStatus');if(el)el.textContent=message}
-function initSupabaseClient(){
- const cfg=getCloudConfig();
+function initSupabaseClient(configOverride){
+ const cfg=configOverride||getCloudConfig();
  if(!cfg.url||!cfg.key||!window.supabase){supabaseClient=null;return false}
  try{supabaseClient=window.supabase.createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});return true}
  catch(e){supabaseClient=null;setCloudStatus('Could not initialize Supabase. Check the Project URL and publishable/anon key.');return false}
 }
 function mergeCloudData(local,remote){
  const out={...local,...remote};
- const objectKeys=['checks','notes','lessons','quiz','timers'];
- objectKeys.forEach(k=>out[k]={...(local?.[k]||{}),...(remote?.[k]||{})});
- ['scores','mistakes'].forEach(k=>{
-  const all=[...(local?.[k]||[]),...(remote?.[k]||[])], seen=new Set();
-  out[k]=all.filter(item=>{const id=String(item?.id??JSON.stringify(item));if(seen.has(id))return false;seen.add(id);return true;}).sort((a,b)=>Number(b?.id||0)-Number(a?.id||0));
- });
+ ['checks','notes','lessons','quiz','timers'].forEach(k=>out[k]={...(local?.[k]||{}),...(remote?.[k]||{})});
+ ['scores','mistakes'].forEach(k=>{const all=[...(local?.[k]||[]),...(remote?.[k]||[])],seen=new Set();out[k]=all.filter(item=>{const id=String(item?.id??JSON.stringify(item));if(seen.has(id))return false;seen.add(id);return true;});});
  ['known','review'].forEach(k=>out[k]=[...new Set([...(local?.[k]||[]),...(remote?.[k]||[])])]);
  return out;
 }
-function scheduleCloudSync(){
- if(!cloudUser||!supabaseClient||cloudWriteInProgress)return;
- clearTimeout(cloudSyncTimer);
- cloudSyncTimer=setTimeout(syncToCloud,900);
-}
+function scheduleCloudSync(){if(!cloudUser||!supabaseClient||cloudWriteInProgress)return;clearTimeout(cloudSyncTimer);cloudSyncTimer=setTimeout(syncToCloud,900)}
 async function syncToCloud(){
  if(!cloudUser||!supabaseClient)return;
- cloudWriteInProgress=true;
- setCloudStatus('Syncing your progress to the cloud…');
- try{
-  const payload={user_id:cloudUser.id,data,updated_at:new Date().toISOString()};
-  const {error}=await supabaseClient.from('tracker_data').upsert(payload,{onConflict:'user_id'});
-  if(error)throw error;
-  setCloudStatus('Cloud sync is up to date for '+cloudUser.email+'.');
- }catch(e){console.error(e);setCloudStatus('Cloud sync failed: '+(e.message||'check table setup, RLS policy and internet connection')+'. Your local data is still saved.');}
- finally{cloudWriteInProgress=false;}
+ cloudWriteInProgress=true;setCloudStatus('Syncing your progress to the cloud…');
+ try{const payload={user_id:cloudUser.id,data,updated_at:new Date().toISOString()};const {error}=await supabaseClient.from('tracker_data').upsert(payload,{onConflict:'user_id'});if(error)throw error;setCloudStatus('Cloud sync is up to date for '+(cloudUser.email||'your account')+'.')}
+ catch(e){console.error(e);setCloudStatus('Cloud sync failed: '+(e.message||'check table setup, RLS policy and internet connection')+'. Your local data is still saved.')}
+ finally{cloudWriteInProgress=false}
 }
 async function loadCloudData(){
  if(!supabaseClient)return;
- const {data:{session},error:sessionError}=await supabaseClient.auth.getSession();
- if(sessionError)throw sessionError;
- cloudUser=session?.user||null;
- if(!cloudUser){setCloudStatus('Cloud settings saved. Sign in to enable cross-device sync.');return}
+ const {data:authData,error:sessionError}=await supabaseClient.auth.getSession();if(sessionError)throw sessionError;
+ cloudUser=authData.session?.user||null;
+ if(!cloudUser){setCloudStatus('Cloud settings loaded. Sign in to enable cross-device sync.');return}
  setCloudStatus('Loading cloud progress…');
- const {data:row,error}=await supabaseClient.from('tracker_data').select('data').eq('user_id',cloudUser.id).maybeSingle();
- if(error)throw error;
+ const {data:row,error}=await supabaseClient.from('tracker_data').select('data').eq('user_id',cloudUser.id).maybeSingle();if(error)throw error;
  if(row?.data)data=mergeCloudData(data,row.data);
- save();
+ localStorage.setItem(storeKey,JSON.stringify(data));
+ renderToday();renderPlan();renderLessons();renderCard();renderMistakes();renderScores();renderStats();runTimerTicker();
  await syncToCloud();
- document.getElementById('saveSupabaseConfig').onclick=()=>{
- const url=document.getElementById('supabaseUrl').value.trim().replace(/\/+$/,'');
- const key=document.getElementById('supabaseKey').value.trim();
- if(!url||!key){setCloudStatus('Enter both the Supabase Project URL and publishable/anon key.');return}
- try{new URL(url)}catch(e){setCloudStatus('Project URL does not look valid.');return}
- localStorage.setItem(cloudConfigKey,JSON.stringify({url,key}));
- if(initSupabaseClient()){setCloudStatus('Cloud settings saved. Sign in or create an account to sync.');}
-};
-document.getElementById('clearSupabaseConfig').onclick=()=>{
- if(!confirm('Clear the Supabase settings saved in this browser? This will sign out locally but will not delete cloud data.'))return;
- if(supabaseClient)supabaseClient.auth.signOut();
- localStorage.removeItem(cloudConfigKey);supabaseClient=null;cloudUser=null;
- document.getElementById('supabaseUrl').value='';document.getElementById('supabaseKey').value='';
- setCloudStatus('Cloud settings cleared. Your local tracker data remains saved.');
-};
-document.getElementById('cloudSignUp').onclick=async()=>{
- if(!supabaseClient){setCloudStatus('Save valid Supabase settings first.');return}
- const email=document.getElementById('cloudEmail').value.trim(),password=document.getElementById('cloudPassword').value;
- if(!email||password.length<8){setCloudStatus('Enter an email and a password with at least 8 characters.');return}
- setCloudStatus('Creating account…');
- const {data:result,error}=await supabaseClient.auth.signUp({email,password});
- if(error){setCloudStatus('Sign-up failed: '+error.message);return}
- if(result.session){cloudUser=result.user;await loadCloudData()}
- else setCloudStatus('Account created. Check your email for a confirmation link, then sign in.');
-};
-document.getElementById('cloudSignIn').onclick=async()=>{
- if(!supabaseClient){setCloudStatus('Save valid Supabase settings first.');return}
- const email=document.getElementById('cloudEmail').value.trim(),password=document.getElementById('cloudPassword').value;
- if(!email||!password){setCloudStatus('Enter your email and password.');return}
- setCloudStatus('Signing in…');
- const {error}=await supabaseClient.auth.signInWithPassword({email,password});
- if(error){setCloudStatus('Sign-in failed: '+error.message);return}
- try{await loadCloudData()}catch(e){setCloudStatus('Signed in, but cloud data could not load: '+(e.message||'check the SQL setup'))}
-};
-document.getElementById('cloudSignOut').onclick=async()=>{
- if(supabaseClient)await supabaseClient.auth.signOut();
- cloudUser=null;setCloudStatus('Signed out. This browser still has its local copy.');
-};
-(function restoreCloudSettings(){
- const cfg=getCloudConfig();
- document.getElementById('supabaseUrl').value=cfg.url||'';
- document.getElementById('supabaseKey').value=cfg.key||'';
- if(initSupabaseClient()){
-  supabaseClient.auth.onAuthStateChange((event,session)=>{
-   cloudUser=session?.user||null;
-   if(cloudUser&&event==='SIGNED_IN')setTimeout(()=>loadCloudData().catch(e=>setCloudStatus('Cloud load failed: '+(e.message||'check the setup'))),0);
-   if(!cloudUser&&event==='SIGNED_OUT')setCloudStatus('Signed out. Local progress remains saved.');
-  });
-  supabaseClient.auth.getSession().then(({data:{session}})=>{
-   if(session)loadCloudData().catch(e=>setCloudStatus('Cloud load failed: '+(e.message||'check the setup')));
-   else setCloudStatus('Cloud settings found. Sign in to enable cross-device sync.');
-  });
- }
-})();
-
-renderToday();renderPlan();renderLessons();renderCard();renderMistakes();renderScores();runTimerTicker();
- setCloudStatus('Signed in as '+cloudUser.email+'. Cloud sync is up to date.');
 }
+function attachCloudHandlers(){
+ document.getElementById('saveSupabaseConfig').onclick=()=>{
+  const url=document.getElementById('supabaseUrl').value.trim().replace(/\/+$/,'');const key=document.getElementById('supabaseKey').value.trim();
+  if(!url||!key){setCloudStatus('Enter both the Supabase Project URL and publishable/anon key.');return}
+  try{new URL(url)}catch(e){setCloudStatus('Project URL does not look valid.');return}
+  localStorage.setItem(cloudConfigKey,JSON.stringify({url,key}));
+  if(initSupabaseClient({url,key})){setCloudStatus('Cloud settings saved. Sign in or create an account to sync.');}
+ };
+ document.getElementById('clearSupabaseConfig').onclick=async()=>{
+  if(!confirm('Clear the Supabase settings saved in this browser? This will sign out locally but will not delete cloud data.'))return;
+  if(supabaseClient)await supabaseClient.auth.signOut();localStorage.removeItem(cloudConfigKey);supabaseClient=null;cloudUser=null;
+  document.getElementById('supabaseUrl').value='';document.getElementById('supabaseKey').value='';setCloudStatus('Cloud settings cleared. Your local tracker data remains saved.');
+ };
+ document.getElementById('cloudSignUp').onclick=async()=>{
+  if(!supabaseClient){setCloudStatus('Cloud is not configured. Set Vercel environment variables or enter your project credentials.');return}
+  const email=document.getElementById('cloudEmail').value.trim(),password=document.getElementById('cloudPassword').value;
+  if(!email||password.length<8){setCloudStatus('Enter an email and a password with at least 8 characters.');return}
+  setCloudStatus('Creating account…');const {data:result,error}=await supabaseClient.auth.signUp({email,password});
+  if(error){setCloudStatus('Sign-up failed: '+error.message);return}
+  if(result.session){cloudUser=result.user;try{await loadCloudData()}catch(e){setCloudStatus('Account created, but loading data failed: '+e.message)}}else setCloudStatus('Account created. Check your email for a confirmation link, then sign in.');
+ };
+ document.getElementById('cloudSignIn').onclick=async()=>{
+  if(!supabaseClient){setCloudStatus('Cloud is not configured. Set Vercel environment variables or enter your project credentials.');return}
+  const email=document.getElementById('cloudEmail').value.trim(),password=document.getElementById('cloudPassword').value;
+  if(!email||!password){setCloudStatus('Enter your email and password.');return}
+  setCloudStatus('Signing in…');const {error}=await supabaseClient.auth.signInWithPassword({email,password});
+  if(error){setCloudStatus('Sign-in failed: '+error.message);return}
+  try{await loadCloudData()}catch(e){setCloudStatus('Signed in, but cloud data could not load: '+(e.message||'check the SQL setup'))}
+ };
+ document.getElementById('cloudSignOut').onclick=async()=>{if(supabaseClient)await supabaseClient.auth.signOut();cloudUser=null;setCloudStatus('Signed out. This browser still has its local copy.')};
+}
+async function restoreCloudSettings(){
+ attachCloudHandlers();
+ const urlInput=document.getElementById('supabaseUrl'),keyInput=document.getElementById('supabaseKey');
+ // On Vercel, /api/config reads the public client configuration from deployment environment variables.
+ try{
+  const response=await fetch('/api/config',{cache:'no-store'});
+  if(response.ok){const serverCfg=await response.json();if(serverCfg.url&&serverCfg.key){
+   localStorage.setItem(cloudConfigKey,JSON.stringify(serverCfg));urlInput.value=serverCfg.url;keyInput.value=serverCfg.key;urlInput.readOnly=true;keyInput.readOnly=true;
+   if(initSupabaseClient(serverCfg)){setCloudStatus('Supabase configuration loaded from Vercel. Sign in to sync your progress.');}
+  }}
+ }catch(e){console.warn('Vercel config endpoint unavailable; checking browser settings.',e)}
+ if(!supabaseClient){const cfg=getCloudConfig();urlInput.value=cfg.url||'';keyInput.value=cfg.key||'';if(initSupabaseClient(cfg))setCloudStatus('Cloud settings found. Sign in to enable cross-device sync.')}
+ if(supabaseClient){
+  supabaseClient.auth.onAuthStateChange((event,session)=>{cloudUser=session?.user||null;if(!cloudUser&&event==='SIGNED_OUT')setCloudStatus('Signed out. Local progress remains saved.')});
+  try{const {data:authData}=await supabaseClient.auth.getSession();if(authData.session)await loadCloudData();else setCloudStatus('Supabase is configured. Create an account or sign in to sync across devices.')}
+  catch(e){setCloudStatus('Supabase connection error: '+(e.message||'check your URL, key, SQL table and RLS policies'))}
+ }else setCloudStatus('Supabase is not configured yet. Add SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY in Vercel, then redeploy.');
+}
+restoreCloudSettings();
 function save(){localStorage.setItem(storeKey,JSON.stringify(data));renderStats();scheduleCloudSync()}
 function iso(d){return d.toISOString().slice(0,10)}
 function parseDate(s){return new Date(s+'T12:00:00')}
