@@ -174,3 +174,11 @@ On first visit, choose **Deepak** to use the shared cloud-backed profile (requir
 
 ## Version 2 vocabulary and listening notes
 The lesson tests use lesson-specific vocabulary banks for Lessons 1–25. See `TEST-REPORT.md` for actual per-lesson counts and limitations. The current Listening Lab uses browser speech synthesis with comprehension questions; it does not yet link each supplied MP3 to a lesson.
+
+## Daily quiz behaviour
+The Quick quiz now follows the lesson assigned to the selected study date and generates five vocabulary questions. Use “New questions / clear answers” for a fresh set for the same lesson.
+
+## Version 3 additions
+- **Grammar reference:** lesson selector for Lessons 1–25 with key grammar patterns, formation notes, Japanese examples, English meanings, and a keyword filter. This is a concise study aid, not a replacement for the textbook's complete explanations/exercises; compare details with your edition of Minna no Nihongo.
+- **Kana recognition flashcards:** Hiragana, Katakana, or mixed practice; basic and voiced/semi-voiced groups; reveal the romaji; mark characters known or for review; quick reference chart.
+- These additions are local front-end features and use the existing tracker save flow for review progress. The live Vercel site is not updated until this folder is deployed.

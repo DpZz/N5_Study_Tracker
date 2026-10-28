@@ -54,3 +54,15 @@ Total entries across lesson banks (duplicates across different lessons may occur
 - Listening Lab currently uses browser Japanese speech synthesis and in-page comprehension prompts; it does not yet map the supplied MP3 collection to specific lesson numbers. Browser Japanese voice availability varies by device.
 - Syntax checks and source-level UI checks were performed. No real browser automation, live Vercel deployment, Supabase credentials, or cross-device sync test was available in this build environment.
 - Keep a local backup before replacing Version 1. After deployment, test both Deepak and Guest profiles, a lesson test, listening playback, and backup export/import.
+
+## Daily quiz update
+- Replaced the fixed Day 1 quiz with five generated vocabulary questions based on the lesson assigned to the selected study date.
+- “New questions / clear answers” shuffles a fresh set for the same lesson.
+- JavaScript syntax check passed; browser-level testing and live deployment remain unverified.
+
+## Version 3 additions (2026-10-28)
+- Added a Grammar Reference tab covering Lessons 1–25 with key patterns, formation/usage notes, sample Japanese sentences, and English translations. Keyword filter applies within the selected lesson.
+- Added Hiragana & Katakana recognition flashcards, including mixed practice and voiced/semi-voiced kana, reveal-romaji interaction, known/review marking, and a quick reference chart.
+- Both embedded JavaScript blocks pass Node.js syntax compilation (`new Function` check).
+- Not verified in a real browser, mobile device, live Vercel deployment, or connected Supabase environment. Deploy to a preview first and test grammar lesson switching/search, kana set/group switching, reveal/known/review buttons, and persistence after refresh.
+- Grammar summaries are a compact study reference based on common Minna no Nihongo I lesson progression, not a verified transcription of the user's exact textbook edition. Check exact wording and examples against the textbook.
